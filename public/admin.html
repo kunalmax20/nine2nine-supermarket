@@ -12,7 +12,7 @@
     <style>
       body {
         font-family: "Inter", sans-serif;
-        background-color: #f3e3d0; /* Coastal Sand */
+        background-color: #f3e3d0;
         color: #334155;
       }
       .admin-card {
@@ -28,19 +28,15 @@
       select {
         outline: none;
         transition: all 0.2s;
+        border: 1px solid #e2e8f0;
       }
       input:focus,
       select:focus {
         border-color: #81a6c6;
         box-shadow: 0 0 0 2px rgba(129, 166, 198, 0.2);
       }
-      /* Hide scrollbar for clean UI but allow scrolling on mobile tables */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
       }
     </style>
   </head>
@@ -104,7 +100,9 @@
           </button>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+        >
           <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1"
               >Name</label
@@ -112,7 +110,7 @@
             <input
               id="pName"
               placeholder="Item name"
-              class="border p-3 rounded-xl bg-slate-50 text-sm w-full"
+              class="p-3 rounded-xl bg-slate-50 text-sm w-full"
             />
           </div>
           <div class="flex flex-col gap-1">
@@ -121,8 +119,18 @@
             >
             <select
               id="pCategory"
-              class="border p-3 rounded-xl bg-slate-50 text-sm w-full cursor-pointer"
+              class="p-3 rounded-xl bg-slate-50 text-sm w-full cursor-pointer"
             ></select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1"
+              >Unit</label
+            >
+            <input
+              id="pUnit"
+              placeholder="e.g. kg, pcs"
+              class="p-3 rounded-xl bg-slate-50 text-sm w-full"
+            />
           </div>
           <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1"
@@ -131,8 +139,8 @@
             <input
               id="pPrice"
               type="number"
-              placeholder="0.00"
-              class="border p-3 rounded-xl bg-slate-50 text-sm w-full"
+              placeholder="0"
+              class="p-3 rounded-xl bg-slate-50 text-sm w-full"
             />
           </div>
           <div class="flex flex-col gap-1">
@@ -143,7 +151,7 @@
               id="pStock"
               type="number"
               placeholder="Qty"
-              class="border p-3 rounded-xl bg-slate-50 text-sm w-full"
+              class="p-3 rounded-xl bg-slate-50 text-sm w-full"
             />
           </div>
           <div class="flex flex-col gap-1">
@@ -153,7 +161,7 @@
             <input
               id="pImage"
               type="file"
-              class="border p-2 rounded-xl bg-slate-50 text-[10px] w-full"
+              class="border-none p-2 rounded-xl bg-slate-50 text-[10px] w-full"
             />
           </div>
         </div>
@@ -169,15 +177,15 @@
 
       <div class="admin-card overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
-          <table class="w-full text-left min-w-[600px]">
+          <table class="w-full text-left min-w-[700px]">
             <thead
               class="bg-slate-50 border-b border-slate-100 text-[#81a6c6] text-[10px] uppercase tracking-widest font-bold"
             >
               <tr>
-                <th class="p-4 md:p-5">Product Details</th>
-                <th class="p-4 md:p-5">Price (₹)</th>
-                <th class="p-4 md:p-5">Stock Management</th>
-                <th class="p-4 md:p-5 text-right">Actions</th>
+                <th class="p-5">Product Details</th>
+                <th class="p-5">Price (₹)</th>
+                <th class="p-5">Stock Management</th>
+                <th class="p-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody id="adminList" class="divide-y divide-slate-50"></tbody>
@@ -191,13 +199,20 @@
         currentUser = null,
         categories = [];
 
+      // LOAD ADMIN DATA
       window.onload = function () {
-        const user = JSON.parse(localStorage.getItem("kirana_user"));
-        if (!user || !user.isAdmin) {
+        const userStr = localStorage.getItem("kirana_user");
+        if (!userStr) {
           window.location.href = "index.html";
           return;
         }
-        currentUser = user;
+
+        currentUser = JSON.parse(userStr);
+        if (!currentUser.isAdmin) {
+          window.location.href = "index.html";
+          return;
+        }
+
         document.getElementById("security-check").classList.add("hidden");
         loadAdmin();
       };
@@ -237,110 +252,178 @@
       }
 
       function renderList() {
+        const list = document.getElementById("adminList");
         if (!products.length) {
-          document.getElementById("adminList").innerHTML =
-            `<tr><td colspan="4" class="p-10 text-center text-slate-400 text-sm">No products found in database</td></tr>`;
+          list.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-400">No products found</td></tr>`;
           return;
         }
 
-        document.getElementById("adminList").innerHTML = products
-          .map(
-            (p) => `
-        <tr class="hover:bg-slate-50 transition">
-          <td class="p-4 md:p-5 flex gap-3 md:gap-4 items-center">
-            <div class="relative group w-12 h-12 shrink-0">
-              <div class="w-full h-full bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
-                <img id="img-${p._id}" src="${p.emoji}" class="w-full h-full object-contain">
-              </div>
-              <button onclick="document.getElementById('file-input-${p._id}').click()" 
-                      class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-              <input type="file" id="file-input-${p._id}" class="hidden" accept="image/*" 
-                     onchange="updateProductImage('${p._id}', this.files[0])">
-            </div>
+        list.innerHTML = products
+          .map((p) => {
+            let variantHtml = "";
+            if (p.options && p.options.length > 0) {
+              variantHtml =
+                `<div class="mt-2 space-y-1">` +
+                p.options
+                  .map(
+                    (opt, idx) => `
+                <div class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-md flex justify-between items-center group">
+                  <span><b>${opt.size}</b>: ₹${opt.price} (Stk: ${opt.stock})</span>
+                  <div class="flex gap-2">
+                    <button onclick="updateVariantStockPrompt('${p._id}', ${idx})" class="text-blue-500 font-bold hover:underline">Restock</button>
+                    <button onclick="removeVariant('${p._id}', ${idx})" class="text-red-400 hover:text-red-600 font-bold">×</button>
+                  </div>
+                </div>`,
+                  )
+                  .join("") +
+                `</div>`;
+            }
 
-            <div class="min-w-0">
-              <p class="font-bold text-xs md:text-sm text-[#001F5B] truncate">${p.name}</p>
-              <p class="text-[9px] md:text-[10px] font-bold text-[#81a6c6] uppercase">${p.category || "General"}</p>
-            </div>
-          </td>
-          
-          <td class="p-4 md:p-5">
-            <div class="flex items-center gap-1">
-              <span class="text-slate-300 text-xs">₹</span>
-              <input type="number" value="${p.price}" 
-                onchange="updateProduct('${p._id}','price',this.value)"
-                class="bg-transparent font-bold text-sm w-14 md:w-16 border-b border-transparent focus:border-[#81a6c6] outline-none">
-            </div>
-          </td>
-          
-          <td class="p-4 md:p-5">
-            <div class="flex items-center gap-2 md:gap-3">
-              <input type="number" placeholder="+ / -"
-                onchange="restockProduct('${p._id}', this.value)"
-                class="border border-slate-200 p-2 w-16 md:w-20 rounded-lg text-xs bg-slate-50">
-              <div class="leading-tight hidden sm:block">
-                <span class="text-[9px] text-slate-400 block uppercase font-bold">Current</span>
-                <b class="text-xs md:text-sm ${p.stockQuantity <= 5 ? "text-red-500" : "text-slate-700"}">${p.stockQuantity}</b>
+            return `<tr class="hover:bg-slate-50 transition border-b border-slate-50">
+            <td class="p-5 flex gap-4 items-center">
+                <div class="relative group w-12 h-12 shrink-0">
+                  <div class="w-full h-full bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
+                    <img id="img-${p._id}" src="${p.emoji}" class="w-full h-full object-contain">
+                  </div>
+                  <button onclick="document.getElementById('file-input-${p._id}').click()" 
+                          class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                  <input type="file" id="file-input-${p._id}" class="hidden" accept="image/*" onchange="updateProductImage('${p._id}', this.files[0])">
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-sm text-[#001F5B] truncate">${p.name}</p>
+                  <p class="text-[10px] font-bold text-[#81a6c6] uppercase">${p.category} | ${p.unit || "Unit"}</p>
+                  ${variantHtml}
+                  <button onclick="addVariantPrompt('${p._id}')" class="mt-2 text-[9px] font-bold text-blue-500 uppercase flex items-center gap-1">+ Add Size Variant</button>
+                </div>
+            </td>
+            <td class="p-5 font-bold text-sm text-slate-600">
+               <div class="flex items-center gap-1">
+                <span class="text-slate-300 text-xs">₹</span>
+                <input type="number" value="${p.price}" onchange="updateProduct('${p._id}','price',this.value)"
+                  class="bg-transparent font-bold text-sm w-14 border-b border-transparent focus:border-[#81a6c6] outline-none">
               </div>
-            </div>
-          </td>
-          
-          <td class="p-4 md:p-5 text-right">
-            <button onclick="deleteItem('${p._id}')" class="p-2 hover:bg-red-50 rounded-lg text-red-400 hover:text-red-600 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </td>
-        </tr>`,
-          )
+            </td>
+            <td class="p-5">
+              <div class="flex items-center gap-3">
+                <input type="number" placeholder="+/-" onchange="restockProduct('${p._id}', this.value)" class="border p-2 w-16 rounded-lg text-xs bg-slate-50">
+                <div class="leading-tight">
+                  <span class="text-[9px] text-slate-400 block uppercase font-bold">Stock</span>
+                  <b class="text-sm ${p.stockQuantity <= 5 ? "text-red-500" : "text-slate-700"}">${p.stockQuantity}</b>
+                </div>
+              </div>
+            </td>
+            <td class="p-5 text-right"><button onclick="deleteItem('${p._id}')" class="text-red-400 hover:text-red-600 transition p-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></td>
+          </tr>`;
+          })
           .join("");
       }
 
-      // UPDATED: Added Image Update with Logging
-      async function updateProductImage(id, file) {
-        if (!file) return;
+      // ADD MAIN PRODUCT
+      async function addItem() {
+        const btn = document.getElementById("addBtn");
+        const name = document.getElementById("pName").value;
+        const category = document.getElementById("pCategory").value;
+        const unit = document.getElementById("pUnit").value || "Unit";
+        const price = document.getElementById("pPrice").value;
+        const stock = document.getElementById("pStock").value;
+        const imageFile = document.getElementById("pImage").files[0];
 
-        console.log("--- 🆕 IMAGE UPDATE STARTED ---");
-        console.log("Product ID:", id);
-        console.log("File Name:", file.name);
+        if (!name || !imageFile)
+          return alert("Product Name and Image are strictly required!");
+
+        btn.innerText = "Processing...";
+        btn.disabled = true;
 
         const fd = new FormData();
         fd.append("phone", currentUser.phone);
-        fd.append("id", id);
-        fd.append("productImage", file);
-
-        const img = document.getElementById(`img-${id}`);
-        if (img) img.style.opacity = "0.3";
+        fd.append("name", name);
+        fd.append("category", category);
+        fd.append("unit", unit);
+        fd.append("price", Number(price) || 0);
+        fd.append("stockQuantity", Number(stock) || 0);
+        fd.append("productImage", imageFile);
+        fd.append("options", JSON.stringify([])); // Explicit empty array
 
         try {
-          console.log("🚀 Sending Request to Server...");
-          const res = await fetch("/api/update-product", {
+          const res = await fetch("/api/add-product", {
             method: "POST",
             body: fd,
           });
-
           const data = await res.json();
-          console.log("📡 Server Response:", data);
-
           if (data.success) {
-            console.log("✅ Update Successful. Refreshing...");
-            loadAdmin();
+            alert("Success!");
+            location.reload();
           } else {
-            console.error("❌ Server Error: Success was false");
-            alert("Image update failed");
-            if (img) img.style.opacity = "1";
+            alert("Failed! " + (data.message || "Check credentials"));
           }
-        } catch (e) {
-          console.error("🔥 Network/Frontend Error:", e);
-          alert("Error uploading image");
-          if (img) img.style.opacity = "1";
+        } catch (err) {
+          alert("Server error!");
+        } finally {
+          btn.innerText = "Save Product to Inventory";
+          btn.disabled = false;
         }
+      }
+
+      // VARIANT & STOCK FUNCTIONS
+      async function updateVariantStockPrompt(prodId, index) {
+        const add = prompt(
+          "Enter amount to ADD to this variant's stock (e.g. 10 or -5):",
+        );
+        if (add === null || isNaN(add)) return;
+        const product = products.find((p) => p._id === prodId);
+        const opts = [...product.options];
+        opts[index].stock += Number(add);
+        const fd = new FormData();
+        fd.append("phone", currentUser.phone);
+        fd.append("id", prodId);
+        fd.append("options", JSON.stringify(opts));
+        const res = await fetch("/api/update-product", {
+          method: "POST",
+          body: fd,
+        });
+        if ((await res.json()).success) loadAdmin();
+      }
+
+      async function addVariantPrompt(id) {
+        const size = prompt("Enter Size (e.g., 500ml, 1kg):");
+        if (!size) return;
+        const price = prompt("Enter Price (₹):");
+        if (!price) return;
+        const stock = prompt("Enter Initial Stock:");
+        if (stock === null) return;
+        const product = products.find((p) => p._id === id);
+        const opts = [
+          ...(product.options || []),
+          { size, price: Number(price), stock: Number(stock) },
+        ];
+        const fd = new FormData();
+        fd.append("phone", currentUser.phone);
+        fd.append("id", id);
+        fd.append("options", JSON.stringify(opts));
+        const res = await fetch("/api/update-product", {
+          method: "POST",
+          body: fd,
+        });
+        if ((await res.json()).success) loadAdmin();
+      }
+
+      async function removeVariant(prodId, index) {
+        if (!confirm("Remove this variant?")) return;
+        const product = products.find((p) => p._id === prodId);
+        const opts = product.options.filter((_, i) => i !== index);
+        const fd = new FormData();
+        fd.append("phone", currentUser.phone);
+        fd.append("id", prodId);
+        fd.append("options", JSON.stringify(opts));
+        const res = await fetch("/api/update-product", {
+          method: "POST",
+          body: fd,
+        });
+        if ((await res.json()).success) loadAdmin();
       }
 
       async function updateProduct(id, field, value) {
@@ -348,72 +431,48 @@
         fd.append("phone", currentUser.phone);
         fd.append("id", id);
         fd.append(field, Number(value));
+        const res = await fetch("/api/update-product", {
+          method: "POST",
+          body: fd,
+        });
+        if ((await res.json()).success) loadAdmin();
+      }
+
+      async function restockProduct(id, value) {
+        const fd = new FormData();
+        fd.append("phone", currentUser.phone);
+        fd.append("id", id);
+        fd.append("stockQuantity", Number(value));
+        const res = await fetch("/api/update-product", {
+          method: "POST",
+          body: fd,
+        });
+        if ((await res.json()).success) loadAdmin();
+      }
+
+      async function updateProductImage(id, file) {
+        if (!file) return;
+        const fd = new FormData();
+        fd.append("phone", currentUser.phone);
+        fd.append("id", id);
+        fd.append("productImage", file);
+        const img = document.getElementById(`img-${id}`);
+        if (img) img.style.opacity = "0.3";
         try {
           const res = await fetch("/api/update-product", {
             method: "POST",
             body: fd,
           });
           if ((await res.json()).success) loadAdmin();
+          else if (img) img.style.opacity = "1";
         } catch (e) {
-          alert("Update failed");
-        }
-      }
-
-      async function restockProduct(id, value) {
-        const num = Number(value);
-        if (isNaN(num)) return alert("Enter a valid number");
-        const fd = new FormData();
-        fd.append("phone", currentUser.phone);
-        fd.append("id", id);
-        fd.append("stockQuantity", num);
-        const res = await fetch("/api/update-product", {
-          method: "POST",
-          body: fd,
-        });
-        if ((await res.json()).success) loadAdmin();
-        else alert("Restock failed");
-      }
-
-      async function addItem() {
-        const btn = document.getElementById("addBtn");
-        const name = document.getElementById("pName").value;
-        const price = document.getElementById("pPrice").value;
-        const stock = document.getElementById("pStock").value;
-        const category = document.getElementById("pCategory").value;
-        const imageFile = document.getElementById("pImage").files[0];
-        if (!name || !imageFile)
-          return alert("Product name and image are required");
-        btn.innerText = "Uploading...";
-        btn.disabled = true;
-        const fd = new FormData();
-        fd.append("phone", currentUser.phone);
-        fd.append("name", name);
-        fd.append("price", Number(price) || 0);
-        fd.append("stockQuantity", Number(stock) || 0);
-        fd.append("category", category || "General");
-        fd.append("productImage", imageFile);
-        try {
-          const res = await fetch("/api/add-product", {
-            method: "POST",
-            body: fd,
-          });
-          if ((await res.json()).success) {
-            alert("Product added!");
-            ["pName", "pPrice", "pStock", "pImage"].forEach(
-              (id) => (document.getElementById(id).value = ""),
-            );
-            loadAdmin();
-          } else alert("Failed to add product");
-        } catch (err) {
-          alert("Server error");
-        } finally {
-          btn.innerText = "Save Product to Inventory";
-          btn.disabled = false;
+          alert("Upload failed");
+          if (img) img.style.opacity = "1";
         }
       }
 
       async function deleteItem(id) {
-        if (!confirm("Are you sure you want to delete this product?")) return;
+        if (!confirm("Delete product permanently?")) return;
         await fetch("/api/delete-product", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

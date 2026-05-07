@@ -30,36 +30,26 @@
         flex-direction: column;
       }
       .product-card:hover {
-        transform: translateY(-6px);
+        transform: translateY(-4px);
         border-color: #81a6c6;
-        box-shadow: 0 15px 30px rgba(129, 166, 198, 0.2);
+        box-shadow: 0 10px 20px rgba(129, 166, 198, 0.1);
       }
       header {
         background-color: #81a6c6 !important;
       }
-      #filter-bar-container {
-        background: rgba(255, 255, 255, 0.5);
-        backdrop-filter: blur(12px);
-        border-radius: 1rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(129, 166, 198, 0.2);
-      }
-      .filter-pill {
-        transition: all 0.2s ease;
-        background-color: #ffffff;
-        color: #5d8caa;
-        border: 1px solid #81a6c6;
-        font-weight: 600;
-        white-space: nowrap;
-      }
-      .filter-pill.active {
-        background-color: #001f5b;
-        color: #ffffff;
-        border-color: #001f5b;
-        box-shadow: 0 4px 12px rgba(0, 31, 91, 0.2);
-      }
       .no-scrollbar::-webkit-scrollbar {
         display: none;
+      }
+      .size-pill {
+        transition: all 0.2s ease;
+        border: 1.5px solid #e2e8f0;
+        cursor: pointer;
+      }
+      .size-pill.active {
+        border-color: #001f5b;
+        background-color: #f0f7ff;
+        color: #001f5b;
+        font-weight: 700;
       }
     </style>
   </head>
@@ -122,11 +112,13 @@
       <div
         class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3"
       >
-        <h1 class="text-xl md:text-2xl font-bold tracking-tighter shrink-0">
+        <h1
+          class="text-xl md:text-2xl font-bold tracking-tighter shrink-0 cursor-pointer"
+          onclick="location.reload()"
+        >
           <span class="text-white">nine</span><span class="logo-pink">2</span
           ><span class="text-white">nine</span>
         </h1>
-
         <div class="order-3 md:order-2 w-full md:w-auto md:flex-1 md:max-w-xs">
           <input
             type="text"
@@ -136,7 +128,6 @@
             class="w-full pl-4 pr-4 py-2 bg-white/20 text-white placeholder-white/70 rounded-full border-none focus:ring-2 focus:ring-white text-sm outline-none"
           />
         </div>
-
         <div class="order-2 md:order-3 flex items-center gap-2 md:gap-4">
           <a
             id="admin-gear"
@@ -145,7 +136,7 @@
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 md:h-6 md:w-6"
+              class="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -166,13 +157,13 @@
           </a>
           <button
             onclick="logout()"
-            class="text-[10px] md:text-xs text-white/70 font-bold hover:text-white transition uppercase"
+            class="text-[10px] text-white/70 font-bold hover:text-white transition uppercase"
           >
             Logout
           </button>
           <button
             onclick="toggleCart()"
-            class="bg-white text-[#001F5B] px-3 md:px-5 py-2 rounded-full font-bold flex items-center gap-1 md:gap-2 shadow-md text-sm transition"
+            class="bg-white text-[#001F5B] px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-md text-sm"
           >
             🛒 <span id="cart-count">0</span>
           </button>
@@ -180,34 +171,29 @@
       </div>
     </header>
 
-    <div
-      id="filter-bar-container"
-      class="max-w-6xl mx-auto px-4 md:px-6 pt-4 md:pt-6 hidden"
-    >
+    <div id="filter-bar-container" class="max-w-6xl mx-auto px-4 pt-6 hidden">
       <div
         id="category-filters"
-        class="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar pb-2"
+        class="flex gap-2 overflow-x-auto no-scrollbar pb-2"
       ></div>
     </div>
 
-    <main id="main-content" class="max-w-6xl mx-auto p-4 md:p-6 hidden">
+    <main id="main-content" class="max-w-6xl mx-auto p-4 hidden">
       <div
         id="product-grid"
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
       ></div>
     </main>
 
     <div
       id="cart-sidebar"
-      class="fixed right-0 top-0 h-full w-full md:w-96 bg-[#F3E3D0] shadow-2xl z-[200] transform translate-x-full transition-transform duration-300 p-4 md:p-6 flex flex-col"
+      class="fixed right-0 top-0 h-full w-full md:w-96 bg-[#F3E3D0] shadow-2xl z-[200] transform translate-x-full transition-transform duration-300 p-6 flex flex-col"
     >
       <div
         class="flex justify-between items-center mb-4 border-b border-slate-300 pb-4"
       >
         <div>
-          <h2 class="text-xl md:text-2xl font-bold text-slate-800">
-            Your Cart
-          </h2>
+          <h2 class="text-2xl font-bold text-slate-800">Your Cart</h2>
           <button
             onclick="clearCart()"
             class="text-[10px] text-red-500 font-bold uppercase hover:underline"
@@ -243,7 +229,6 @@
         cart = {},
         currentUser = null,
         activeCategory = "All";
-
       const ADMIN_NUMBERS = [
         "919057563838",
         "9057563838",
@@ -265,13 +250,11 @@
         const raw = document.getElementById("userPhone").value;
         const password = document.getElementById("adminPassword").value;
         if (raw.length !== 10) return alert("Enter 10 digits");
-
         const res = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: "91" + raw, password }),
         });
-
         const data = await res.json();
         if (data.success) {
           localStorage.setItem("kirana_user", JSON.stringify(data));
@@ -287,14 +270,11 @@
         }
         currentUser = JSON.parse(userStr);
         document.getElementById("login-overlay").classList.add("hidden");
-        document.getElementById("main-header").classList.remove("hidden");
-        document
-          .getElementById("filter-bar-container")
-          .classList.remove("hidden");
-        document.getElementById("main-content").classList.remove("hidden");
-        if (currentUser.isAdmin) {
+        ["main-header", "filter-bar-container", "main-content"].forEach((id) =>
+          document.getElementById(id).classList.remove("hidden"),
+        );
+        if (currentUser.isAdmin)
           document.getElementById("admin-gear").classList.remove("hidden");
-        }
         init();
       }
 
@@ -319,7 +299,7 @@
         document.getElementById("category-filters").innerHTML = categories
           .map(
             (cat) =>
-              `<button onclick="setCategoryFilter('${cat}')" class="filter-pill px-5 py-2 rounded-full text-xs md:text-sm ${activeCategory === cat ? "active" : ""}"> ${cat} </button>`,
+              `<button onclick="setCategoryFilter('${cat}')" class="filter-pill px-5 py-2 rounded-full text-xs font-bold ${activeCategory === cat ? "active" : ""}"> ${cat} </button>`,
           )
           .join("");
       }
@@ -341,32 +321,63 @@
         render();
       }
 
+      function setSize(prodId, size, price, stock) {
+        const card = document.querySelector(`[data-prod-id="${prodId}"]`);
+        card
+          .querySelectorAll(".size-pill")
+          .forEach((btn) => btn.classList.remove("active"));
+        event.target.classList.add("active");
+        card.querySelector(".display-price").innerText = `₹${price}`;
+        card.querySelector(".display-stock").innerText = `Stock: ${stock}`;
+        const addBtn = card.querySelector(".add-btn");
+        if (stock <= 0) {
+          addBtn.disabled = true;
+          addBtn.innerText = "OOS";
+          addBtn.className =
+            "add-btn bg-slate-200 text-slate-400 text-[10px] font-bold px-4 py-2 rounded-lg cursor-not-allowed";
+        } else {
+          addBtn.disabled = false;
+          addBtn.innerText = "Add";
+          addBtn.className =
+            "add-btn bg-[#81a6c6] text-white text-[10px] font-bold px-4 py-2 rounded-lg hover:bg-[#001F5B] transition";
+        }
+      }
+
       function render() {
         const grid = document.getElementById("product-grid");
         if (filteredList.length === 0) {
           grid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-400">No products found.</div>`;
           return;
         }
-
         grid.innerHTML = filteredList
           .map((p) => {
-            const sid = p._id || p.id || (p._doc ? p._doc._id : null);
-            return `
-            <div class="product-card p-3 md:p-4">
-              <img src="${p.emoji}" class="w-full h-24 md:h-32 object-contain mb-2 md:mb-3 p-2 bg-slate-50 rounded-xl">
+            const sid = p._id || p.id;
+            const hasOptions = p.options && p.options.length > 0;
+            const initialPrice = hasOptions ? p.options[0].price : p.price;
+            const initialStock = hasOptions
+              ? p.options[0].stock
+              : p.stockQuantity;
+            let optionsHtml = "";
+            if (hasOptions) {
+              optionsHtml =
+                `<div class="flex gap-1 overflow-x-auto no-scrollbar mb-3 py-1">` +
+                p.options
+                  .map(
+                    (opt, idx) =>
+                      `<button onclick="setSize('${sid}', '${opt.size}', ${opt.price}, ${opt.stock})" class="size-pill text-[9px] px-2 py-1 rounded-md bg-white border whitespace-nowrap ${idx === 0 ? "active" : ""}"> ${opt.size} </button>`,
+                  )
+                  .join("") +
+                `</div>`;
+            }
+            return `<div class="product-card p-3 md:p-4" data-prod-id="${sid}">
+              <img src="${p.emoji}" class="w-full h-28 object-contain mb-3 p-2 bg-slate-50 rounded-xl">
               <div class="flex-1 flex flex-col">
-                <h3 class="font-bold text-xs md:text-sm line-clamp-2 h-8 md:h-10 mb-1 leading-tight">${p.name}</h3>
-                <p class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase mb-2">${p.category || "General"}</p>
+                <h3 class="font-bold text-xs md:text-sm line-clamp-2 h-10 mb-1 leading-tight">${p.name}</h3>
+                <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">${p.category || "General"}</p>
+                ${optionsHtml}
                 <div class="mt-auto flex justify-between items-end">
-                  <div>
-                    <p class="text-[9px] md:text-[10px] text-slate-400">Stock: ${p.stockQuantity || 0}</p>
-                    <p class="font-bold text-[#001F5B] text-sm md:text-base">₹${p.price}</p>
-                  </div>
-                  ${
-                    p.stockQuantity <= 0
-                      ? `<button disabled class="bg-slate-200 text-slate-400 text-[9px] md:text-[10px] font-bold px-2 md:px-3 py-1.5 md:py-2 rounded-lg">OOS</button>`
-                      : `<button onclick="addToCart('${sid}')" class="bg-[#81a6c6] text-white text-[9px] md:text-[10px] font-bold px-3 md:px-4 py-1.5 md:py-2 rounded-lg hover:bg-[#001F5B] transition">Add</button>`
-                  }
+                  <div><p class="display-stock text-[9px] text-slate-400">Stock: ${initialStock}</p><p class="display-price font-bold text-[#001F5B] text-sm md:text-base">₹${initialPrice}</p></div>
+                  <button onclick="addToCart('${sid}')" ${initialStock <= 0 ? "disabled" : ""} class="add-btn ${initialStock <= 0 ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-[#81a6c6] text-white hover:bg-[#001F5B]"} text-[10px] font-bold px-4 py-2 rounded-lg transition">${initialStock <= 0 ? "OOS" : "Add"}</button>
                 </div>
               </div>
             </div>`;
@@ -377,28 +388,48 @@
 
       function addToCart(id) {
         const p = products.find((prod) => (prod._id || prod.id) === id);
-        if (!p) return;
-        if (!cart[id]) {
-          cart[id] = {
-            id: p._id || p.id,
+        const card = document.querySelector(`[data-prod-id="${id}"]`);
+        const activePill = card.querySelector(".size-pill.active");
+
+        // FIXED LOGIC: If there is an active variant pill, use that size.
+        // If NOT, use the keyword "Standard".
+        const selectedSize = activePill
+          ? activePill.innerText.trim()
+          : "Standard";
+
+        const currentPrice = Number(
+          card.querySelector(".display-price").innerText.replace("₹", ""),
+        );
+        const currentStock = Number(
+          card.querySelector(".display-stock").innerText.replace("Stock: ", ""),
+        );
+
+        const cartKey = `${id}-${selectedSize}`;
+
+        if (!cart[cartKey]) {
+          cart[cartKey] = {
+            id: id,
             name: p.name,
-            price: p.price,
+            size: selectedSize,
+            price: currentPrice,
             qty: 0,
+            maxStock: currentStock,
           };
         }
-        if (cart[id].qty >= p.stockQuantity) {
-          showToast(`Only ${p.stockQuantity} in stock`, "error");
-          return;
+
+        if (cart[cartKey].qty >= currentStock) {
+          return showToast(`Only ${currentStock} available`, "error");
         }
-        cart[id].qty++;
+
+        cart[cartKey].qty++;
         showToast(`${p.name} added`);
         updateCartSidebar();
       }
 
       function updateQty(key, change) {
         if (!cart[key]) return;
-        const p = products.find((prod) => (prod._id || prod.id) === key);
-        if (change > 0 && cart[key].qty >= p.stockQuantity) return;
+        if (change > 0 && cart[key].qty >= cart[key].maxStock)
+          return showToast("Max stock reached", "error");
         cart[key].qty += change;
         if (cart[key].qty <= 0) delete cart[key];
         updateCartSidebar();
@@ -408,7 +439,6 @@
         cart = {};
         updateCartSidebar();
       }
-
       function toggleCart() {
         document
           .getElementById("cart-sidebar")
@@ -418,73 +448,127 @@
       function updateCartSidebar() {
         const keys = Object.keys(cart);
         const list = document.getElementById("cart-items");
+        let subtotal = 0,
+          count = 0;
         if (!keys.length) {
           list.innerHTML = `<div class="text-center py-10 text-slate-400 font-medium text-sm">Your cart is empty</div>`;
           document.getElementById("cart-total").innerText = "0";
           document.getElementById("cart-count").innerText = "0";
           return;
         }
-        let total = 0,
-          count = 0;
         list.innerHTML = keys
           .map((k) => {
             const i = cart[k];
-            total += i.price * i.qty;
+            subtotal += i.price * i.qty;
             count += i.qty;
-            return `
-            <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-              <div class="flex-1 pr-2">
-                <p class="font-bold text-xs md:text-sm text-slate-800 line-clamp-1">${i.name}</p>
-                <p class="text-[10px] md:text-xs text-[#001F5B] font-bold">₹${i.price * i.qty}</p>
-              </div>
-              <div class="flex items-center gap-2 md:gap-3 bg-slate-100 px-2 py-1 rounded-lg">
-                <button onclick="updateQty('${k}', -1)" class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-white rounded shadow-sm text-red-500 font-bold text-sm">-</button>
-                <span class="text-[10px] md:text-xs font-bold w-3 text-center">${i.qty}</span>
-                <button onclick="updateQty('${k}', 1)" class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-white rounded shadow-sm text-green-500 font-bold text-sm">+</button>
+            return `<div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+              <div class="flex-1 pr-2"><p class="font-bold text-xs text-slate-800 line-clamp-1">${i.name}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${i.size}</p><p class="text-xs text-[#001F5B] font-bold">₹${i.price * i.qty}</p></div>
+              <div class="flex items-center gap-2 bg-slate-100 px-2 py-1 rounded-lg">
+                <button onclick="updateQty('${k}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-red-500 font-bold">-</button>
+                <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
+                <button onclick="updateQty('${k}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-green-500 font-bold">+</button>
               </div>
             </div>`;
           })
           .join("");
-        document.getElementById("cart-total").innerText = total;
+
+        const deliveryFee = subtotal >= 2000 ? 0 : 60;
+        const grandTotal = subtotal + deliveryFee;
+        const deliveryHtml =
+          deliveryFee === 0
+            ? `<span class="text-green-600 font-bold">FREE</span>`
+            : `₹${deliveryFee}`;
+        const freeShippingMessage =
+          subtotal < 2000
+            ? `<p class="text-[10px] text-orange-500 font-bold mt-1 text-center">Add ₹${2000 - subtotal} more for FREE delivery!</p>`
+            : `<p class="text-[10px] text-green-600 font-bold mt-1 text-center">Yay! You got Free Delivery!</p>`;
+        document.getElementById("cart-total").innerText = grandTotal;
         document.getElementById("cart-count").innerText = count;
+        list.insertAdjacentHTML(
+          "beforeend",
+          `<div class="mt-4 p-3 bg-white/50 rounded-xl border border-dashed border-slate-300"><div class="flex justify-between text-xs text-slate-500 mb-1"><span>Subtotal:</span> <span>₹${subtotal}</span></div><div class="flex justify-between text-xs text-slate-500"><span>Delivery Fee:</span> <span>${deliveryHtml}</span></div>${freeShippingMessage}</div>`,
+        );
       }
+      // GLOBAL VARIABLE to hold keys temporarily
+      let pendingOrderKeys = null;
 
       async function generateInvoice() {
         const keys = Object.keys(cart);
         if (!keys.length) return showToast("Cart empty", "error");
-        let msg = "📦 *NINE2NINE ORDER*%0A";
-        let total = 0;
+
+        let subtotal = 0;
+        let msg = "📦 *NINE2NINE ORDER*%0A%0A";
         keys.forEach((k) => {
           const i = cart[k];
-          total += i.price * i.qty;
-          msg += `• ${i.name} x${i.qty} = ₹${i.price * i.qty}%0A`;
+          subtotal += i.price * i.qty;
+          msg += `• *${i.name}* (${i.size})%0A   ${i.qty} x ₹${i.price} = ₹${i.price * i.qty}%0A`;
         });
-        msg += `%0A*TOTAL: ₹${total}*`;
+
+        const deliveryFee = subtotal >= 2000 ? 0 : 60;
+        const grandTotal = subtotal + deliveryFee;
+        msg += `%0A--------------------------%0A`;
+        msg += `Subtotal: ₹${subtotal}%0A`;
+        msg += `Delivery Fee: ${deliveryFee === 0 ? "FREE" : "₹" + deliveryFee}%0A`;
+        msg += `*TOTAL AMOUNT: ₹${grandTotal}*%0A`;
+        msg += `--------------------------%0A`;
+
+        // Save keys to global variable for the confirmation modal
+        pendingOrderKeys = keys;
+
+        // Open WhatsApp
         window.open(`https://wa.me/919057563838?text=${msg}`, "_blank");
-        if (confirm("Reduce stock for this order?")) {
-          const items = keys.map((k) => ({ id: cart[k].id, qty: cart[k].qty }));
+
+        // Show the confirmation modal after a short delay so it's there when they return
+        setTimeout(() => {
+          document.getElementById("order-modal").classList.remove("hidden");
+        }, 1000);
+      }
+
+      async function confirmOrder(isSuccess) {
+        // Hide the modal
+        document.getElementById("order-modal").classList.add("hidden");
+
+        if (isSuccess && pendingOrderKeys) {
+          const items = pendingOrderKeys.map((k) => ({
+            id: cart[k].id,
+            qty: cart[k].qty,
+            size: cart[k].size,
+          }));
+
           try {
             const res = await fetch("/api/reduce-stock", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ items }),
             });
+
             if (res.ok) {
-              showToast("Stock updated");
-              cart = {};
+              showToast("Order Confirmed! Stock Updated.");
+              cart = {}; // Empty the cart
               updateCartSidebar();
-              init();
+              if (
+                !document
+                  .getElementById("cart-sidebar")
+                  .classList.contains("translate-x-full")
+              ) {
+                toggleCart();
+              }
+              init(); // Refresh shop to show updated stock
             }
           } catch (e) {
             showToast("Failed to update stock", "error");
           }
+        } else {
+          showToast("Stock not reduced. Items kept in cart.", "error");
         }
-      }
 
+        // Reset global variable
+        pendingOrderKeys = null;
+      }
       function showToast(msg, type = "success") {
         const container = document.getElementById("toast-container");
         const toast = document.createElement("div");
-        toast.className = `px-4 py-2 md:px-6 md:py-3 rounded-xl shadow-lg text-white font-bold text-xs md:text-sm transform transition-all duration-300 ${type === "error" ? "bg-red-500" : "bg-[#001F5B]"}`;
+        toast.className = `px-6 py-3 rounded-xl shadow-lg text-white font-bold text-sm transform transition-all duration-300 ${type === "error" ? "bg-red-500" : "bg-[#001F5B]"}`;
         toast.innerText = msg;
         container.appendChild(toast);
         setTimeout(() => {
@@ -498,38 +582,64 @@
         window.location.href = "index.html";
       }
     </script>
-    <footer
-      class="bg-white border-t border-slate-200 mt-12 py-8 md:py-12 px-4 md:px-6"
-    >
+    <footer class="bg-white border-t border-slate-200 mt-12 py-12 px-6">
       <div
-        class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 text-center md:text-left"
+        class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 text-center md:text-left"
       >
         <div>
-          <h2 class="text-xl md:text-2xl font-bold text-[#001F5B] mb-3 md:mb-4">
+          <h2 class="text-2xl font-bold text-[#001F5B] mb-4">
             13 Years of Trust
           </h2>
-          <p class="text-sm md:text-base text-slate-600 leading-relaxed">
+          <p class="text-slate-600 leading-relaxed">
             For over 13 years, <strong>nine2nine Supermarket</strong> has been a
             cornerstone of the Jodhpur community. Every item is priced below
             MRP.
           </p>
         </div>
         <div>
-          <h2 class="text-xl md:text-2xl font-bold text-[#001F5B] mb-3 md:mb-4">
-            Find Us
-          </h2>
-          <p class="font-bold text-slate-800 text-xs md:text-sm italic">
+          <h2 class="text-2xl font-bold text-[#001F5B] mb-4">Find Us</h2>
+          <p class="font-bold text-slate-800 text-sm italic">
             📍 Roop Nagar, Bhadu Market, Jodhpur, Rajasthan 342003
           </p>
-          <p class="font-bold text-slate-800 text-xs md:text-sm mt-2">
+          <p class="font-bold text-slate-800 text-sm mt-2">
             📞 Praveen: +91 9414411960 | Sanjay: +91 9509750929
           </p>
         </div>
       </div>
       <div
-        class="max-w-6xl mx-auto mt-8 md:mt-12 pt-6 md:pt-8 border-t border-slate-100 text-center text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest"
+        class="max-w-6xl mx-auto mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-xs font-bold uppercase tracking-widest"
       >
         © 2026 nine2nine Supermarket Jodhpur
+      </div>
+      <div
+        id="order-modal"
+        class="fixed inset-0 bg-black/60 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-sm"
+      >
+        <div
+          class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center"
+        >
+          <div class="text-4xl mb-4">📲</div>
+          <h3 class="text-xl font-bold text-slate-800 mb-2">
+            Check Order Status
+          </h3>
+          <p class="text-sm text-slate-500 mb-6">
+            Did you successfully send the order message on WhatsApp?
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              onclick="confirmOrder(false)"
+              class="py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition text-sm"
+            >
+              No, I Clicked back
+            </button>
+            <button
+              onclick="confirmOrder(true)"
+              class="py-3 rounded-xl font-bold text-white bg-[#001F5B] hover:bg-[#001540] transition text-sm shadow-lg shadow-blue-900/20"
+            >
+              Yes, Ordered
+            </button>
+          </div>
+        </div>
       </div>
     </footer>
   </body>

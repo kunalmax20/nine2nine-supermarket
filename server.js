@@ -6,10 +6,8 @@ const path = require("path");
 const multer = require("multer");
 const dns = require("dns");
 const cloudinary = require("cloudinary").v2;
-
 const Product = require("./models/Product");
 
-// 1. DEFINE PORT AT THE TOP
 const PORT = process.env.PORT || 3000;
 
 cloudinary.config({
@@ -21,8 +19,6 @@ cloudinary.config({
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const app = express();
 
-// REMOVED: app.listen from here (it was line 20)
-
 const uploadDir = path.join(__dirname, "temp");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -33,10 +29,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 mongoose
-  .connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-  })
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ nine2nine Database Connected!"))
   .catch((err) => console.error("❌ DB Error:", err.message));
 
@@ -50,24 +43,21 @@ const ADMIN_NUMBERS = [
 ];
 const ADMIN_PASSWORD = "nine2nine";
 
+// Helper to check admin status
+const isAdmin = (phone) => ADMIN_NUMBERS.includes(String(phone));
+
 // LOGIN
 app.post("/api/login", (req, res) => {
   const { phone, password } = req.body;
-  const isAdmin = ADMIN_NUMBERS.includes(phone);
-  if (isAdmin && password === ADMIN_PASSWORD)
-    return res.json({ success: true, isAdmin: true, phone });
-  res.json({ success: true, isAdmin: false, phone });
+  const adminStatus = isAdmin(phone) && password === ADMIN_PASSWORD;
+  res.json({ success: true, isAdmin: adminStatus, phone });
 });
 
 // GET PRODUCTS
 app.get("/api/products", async (req, res) => {
   try {
     const products = await Product.find({}).sort({ _id: -1 });
-    const transformed = products.map((p) => ({
-      ...p._doc,
-      id: p._id,
-    }));
-    res.json(transformed);
+    res.json(products.map((p) => ({ ...p._doc, id: p._id })));
   } catch (err) {
     res.status(500).json({ error: "Fetch failed" });
   }
@@ -81,29 +71,44 @@ app.post(
     try {
       const { phone, name, price, stockQuantity, category, options, unit } =
         req.body;
-      if (!ADMIN_NUMBERS.includes(phone))
-        return res.status(403).json({ success: false });
+
+      if (!isAdmin(phone))
+        return res
+          .status(403)
+          .json({ success: false, message: "Unauthorized" });
+      if (!req.file)
+        return res
+          .status(400)
+          .json({ success: false, message: "Image required" });
 
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: "nine2nine_products",
       });
 
+      let parsedOptions = [];
+      if (options) {
+        try {
+          parsedOptions = JSON.parse(options);
+        } catch (e) {
+          parsedOptions = [];
+        }
+      }
+
       const newProduct = new Product({
-        name,
+        name: name || "Unnamed Product",
         price: Number(price) || 0,
         category: category || "General",
         unit: unit || "Unit",
         emoji: result.secure_url,
         stockQuantity: Number(stockQuantity) || 0,
-        options: options ? JSON.parse(options) : [],
-        reviews: [],
+        options: parsedOptions,
       });
 
       await newProduct.save();
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       res.json({ success: true });
     } catch (err) {
-      console.error(err);
+      console.error("🔥 ADD ERROR:", err);
       res.status(500).json({ success: false });
     }
   },
@@ -112,17 +117,25 @@ app.post(
 // REDUCE STOCK
 app.post("/api/reduce-stock", async (req, res) => {
   const { items } = req.body;
+  if (!items || !Array.isArray(items))
+    return res.status(400).json({ success: false });
+
   try {
-    await Promise.all(
-      items.map((item) =>
-        Product.findByIdAndUpdate(item.id, {
-          $inc: { stockQuantity: -item.qty },
-        }),
-      ),
-    );
+    for (const item of items) {
+      if (item.size && item.size !== "Standard") {
+        const variantUpdate = await Product.updateOne(
+          { _id: item.id, "options.size": item.size },
+          { $inc: { "options.$.stock": -Math.abs(item.qty) } },
+        );
+        if (variantUpdate.modifiedCount > 0) continue;
+      }
+      await Product.updateOne(
+        { _id: item.id },
+        { $inc: { stockQuantity: -Math.abs(item.qty) } },
+      );
+    }
     res.json({ success: true });
   } catch (err) {
-    console.error("Stock update error:", err);
     res.status(500).json({ success: false });
   }
 });
@@ -133,20 +146,16 @@ app.post(
   upload.single("productImage"),
   async (req, res) => {
     try {
-      const { phone, id, price, stockQuantity } = req.body;
-
-      console.log("--- Update Request Received ---");
-      if (!ADMIN_NUMBERS.includes(phone) || !id) {
+      const { phone, id, price, stockQuantity, options, unit } = req.body;
+      if (!isAdmin(phone) || !id)
         return res.status(403).json({ success: false });
-      }
 
-      let updateQuery = {};
-      if (price !== undefined && price !== "") {
-        updateQuery.$set = {
-          ...(updateQuery.$set || {}),
-          price: Number(price),
-        };
-      }
+      let updateData = {};
+      if (price !== undefined) updateData.price = Number(price);
+      if (unit !== undefined) updateData.unit = unit;
+      if (options) updateData.options = JSON.parse(options);
+
+      let updateQuery = { $set: updateData };
       if (stockQuantity !== undefined && stockQuantity !== "") {
         updateQuery.$inc = { stockQuantity: Number(stockQuantity) };
       }
@@ -155,24 +164,13 @@ app.post(
         const result = await cloudinary.uploader.upload(req.file.path, {
           folder: "nine2nine_products",
         });
-        updateQuery.$set = {
-          ...(updateQuery.$set || {}),
-          emoji: result.secure_url,
-        };
+        updateQuery.$set.emoji = result.secure_url;
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       }
 
-      const updatedProduct = await Product.findByIdAndUpdate(id, updateQuery, {
-        new: true,
-      });
-
-      if (updatedProduct) {
-        res.json({ success: true });
-      } else {
-        res.status(404).json({ success: false });
-      }
+      await Product.findByIdAndUpdate(id, updateQuery);
+      res.json({ success: true });
     } catch (err) {
-      console.error("🔥 SERVER ERROR:", err.message);
       res.status(500).json({ success: false });
     }
   },
@@ -180,20 +178,10 @@ app.post(
 
 // DELETE PRODUCT
 app.post("/api/delete-product", async (req, res) => {
-  try {
-    const { phone, id } = req.body;
-    if (!ADMIN_NUMBERS.includes(phone))
-      return res.status(403).json({ success: false });
-    await Product.findByIdAndDelete(id);
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Delete error:", err);
-    res.status(500).json({ success: false });
-  }
+  const { phone, id } = req.body;
+  if (!isAdmin(phone)) return res.status(403).json({ success: false });
+  await Product.findByIdAndDelete(id);
+  res.json({ success: true });
 });
 
-// 2. ONE SINGLE LISTEN COMMAND AT THE BOTTOM
 app.listen(PORT, () => console.log(`🚀 LIVE ON PORT ${PORT}`));
-git add server.js
-git commit -m "Fix: move PORT definition and remove duplicate listener"
-git push origin main
