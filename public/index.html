@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nine2nine Supermarket | Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3e3d0;
+        color: #334155;
+      }
+      .logo-blue {
+        color: #81a6c6;
+      }
+      .logo-pink {
+        color: #ff87b9;
+      }
+      .product-card {
+        background-color: #ffffff;
+        border-radius: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(129, 166, 198, 0.2);
+        display: flex;
+        flex-direction: column;
+      }
+      .product-card:hover {
+        transform: translateY(-6px);
+        border-color: #81a6c6;
+        box-shadow: 0 15px 30px rgba(129, 166, 198, 0.2);
+      }
+      header {
+        background-color: #81a6c6 !important;
+      }
+      #filter-bar-container {
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(12px);
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(129, 166, 198, 0.2);
+      }
+      .filter-pill {
+        transition: all 0.2s ease;
+        background-color: #ffffff;
+        color: #5d8caa;
+        border: 1px solid #81a6c6;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .filter-pill.active {
+        background-color: #001f5b;
+        color: #ffffff;
+        border-color: #001f5b;
+        box-shadow: 0 4px 12px rgba(0, 31, 91, 0.2);
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="text-slate-800">
+    <div
+      id="login-overlay"
+      class="fixed inset-0 bg-[#F3E3D0] z-[250] flex items-center justify-center p-4"
+    >
+      <div class="max-w-md w-full text-center">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tighter">
+          <span class="logo-blue">nine</span><span class="logo-pink">2</span
+          ><span class="logo-blue">nine</span>
+        </h1>
+        <p
+          class="text-[#81A6C6] font-bold uppercase tracking-widest text-xs mt-2"
+        >
+          Supermarket
+        </p>
+        <div
+          class="bg-white/50 p-2 rounded-2xl flex items-center mb-4 mt-8 border border-[#81A6C6]/20"
+        >
+          <span class="px-4 font-bold text-slate-400">+91</span>
+          <input
+            type="number"
+            id="userPhone"
+            oninput="checkAdminPhone()"
+            placeholder="XXXXXXXXXX"
+            class="bg-transparent w-full p-3 outline-none font-bold text-lg"
+          />
+        </div>
+        <div
+          id="admin-password-wrapper"
+          class="hidden bg-white/50 p-2 rounded-2xl flex items-center mb-4 border border-[#81A6C6]"
+        >
+          <input
+            type="password"
+            id="adminPassword"
+            placeholder="Admin Password"
+            class="bg-transparent w-full p-3 outline-none font-bold text-lg"
+          />
+        </div>
+        <button
+          onclick="handleLogin()"
+          class="w-full bg-[#81A6C6] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#5D8CAA] transition"
+        >
+          Enter Supermarket
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="toast-container"
+      class="fixed top-20 right-5 z-[150] space-y-3 pointer-events-none"
+    ></div>
+
+    <header
+      id="main-header"
+      class="sticky top-0 z-[80] p-3 md:p-4 shadow-sm hidden"
+    >
+      <div
+        class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3"
+      >
+        <h1 class="text-xl md:text-2xl font-bold tracking-tighter shrink-0">
+          <span class="text-white">nine</span><span class="logo-pink">2</span
+          ><span class="text-white">nine</span>
+        </h1>
+
+        <div class="order-3 md:order-2 w-full md:w-auto md:flex-1 md:max-w-xs">
+          <input
+            type="text"
+            id="searchInput"
+            oninput="filterItems()"
+            placeholder="Search items..."
+            class="w-full pl-4 pr-4 py-2 bg-white/20 text-white placeholder-white/70 rounded-full border-none focus:ring-2 focus:ring-white text-sm outline-none"
+          />
+        </div>
+
+        <div class="order-2 md:order-3 flex items-center gap-2 md:gap-4">
+          <a
+            id="admin-gear"
+            href="admin.html"
+            class="hidden p-2 text-white/70 hover:text-white transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 md:h-6 md:w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </a>
+          <button
+            onclick="logout()"
+            class="text-[10px] md:text-xs text-white/70 font-bold hover:text-white transition uppercase"
+          >
+            Logout
+          </button>
+          <button
+            onclick="toggleCart()"
+            class="bg-white text-[#001F5B] px-3 md:px-5 py-2 rounded-full font-bold flex items-center gap-1 md:gap-2 shadow-md text-sm transition"
+          >
+            🛒 <span id="cart-count">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div
+      id="filter-bar-container"
+      class="max-w-6xl mx-auto px-4 md:px-6 pt-4 md:pt-6 hidden"
+    >
+      <div
+        id="category-filters"
+        class="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar pb-2"
+      ></div>
+    </div>
+
+    <main id="main-content" class="max-w-6xl mx-auto p-4 md:p-6 hidden">
+      <div
+        id="product-grid"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6"
+      ></div>
+    </main>
+
+    <div
+      id="cart-sidebar"
+      class="fixed right-0 top-0 h-full w-full md:w-96 bg-[#F3E3D0] shadow-2xl z-[200] transform translate-x-full transition-transform duration-300 p-4 md:p-6 flex flex-col"
+    >
+      <div
+        class="flex justify-between items-center mb-4 border-b border-slate-300 pb-4"
+      >
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold text-slate-800">
+            Your Cart
+          </h2>
+          <button
+            onclick="clearCart()"
+            class="text-[10px] text-red-500 font-bold uppercase hover:underline"
+          >
+            🗑️ Clear All
+          </button>
+        </div>
+        <button onclick="toggleCart()" class="text-3xl text-slate-400">
+          &times;
+        </button>
+      </div>
+      <div
+        id="cart-items"
+        class="flex-1 overflow-y-auto space-y-4 no-scrollbar"
+      ></div>
+      <div class="border-t border-slate-300 pt-6 mt-4">
+        <div class="flex justify-between font-bold text-xl mb-6">
+          <span>Total:</span
+          ><span class="text-[#001F5B]">₹<span id="cart-total">0</span></span>
+        </div>
+        <button
+          onclick="generateInvoice()"
+          class="w-full bg-[#001F5B] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-[#001540] transition"
+        >
+          Order via WhatsApp
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let products = [],
+        filteredList = [],
+        cart = {},
+        currentUser = null,
+        activeCategory = "All";
+
+      const ADMIN_NUMBERS = [
+        "919057563838",
+        "9057563838",
+        "919414411960",
+        "9414411960",
+        "919509750929",
+        "9509750929",
+      ];
+
+      function checkAdminPhone() {
+        const raw = document.getElementById("userPhone").value.trim();
+        const wrapper = document.getElementById("admin-password-wrapper");
+        if (ADMIN_NUMBERS.includes(raw) || ADMIN_NUMBERS.includes("91" + raw))
+          wrapper.classList.remove("hidden");
+        else wrapper.classList.add("hidden");
+      }
+
+      async function handleLogin() {
+        const raw = document.getElementById("userPhone").value;
+        const password = document.getElementById("adminPassword").value;
+        if (raw.length !== 10) return alert("Enter 10 digits");
+
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: "91" + raw, password }),
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem("kirana_user", JSON.stringify(data));
+          setupUI();
+        } else alert("Login failed");
+      }
+
+      function setupUI() {
+        const userStr = localStorage.getItem("kirana_user");
+        if (!userStr) {
+          document.getElementById("login-overlay").classList.remove("hidden");
+          return;
+        }
+        currentUser = JSON.parse(userStr);
+        document.getElementById("login-overlay").classList.add("hidden");
+        document.getElementById("main-header").classList.remove("hidden");
+        document
+          .getElementById("filter-bar-container")
+          .classList.remove("hidden");
+        document.getElementById("main-content").classList.remove("hidden");
+        if (currentUser.isAdmin) {
+          document.getElementById("admin-gear").classList.remove("hidden");
+        }
+        init();
+      }
+
+      document.addEventListener("DOMContentLoaded", setupUI);
+
+      async function init() {
+        try {
+          const res = await fetch(`/api/products?t=${Date.now()}`);
+          products = await res.json();
+          filterItems();
+          renderFilters();
+        } catch {
+          showToast("Failed to load products", "error");
+        }
+      }
+
+      function renderFilters() {
+        const categories = [
+          "All",
+          ...new Set(products.map((p) => p.category || "General")),
+        ];
+        document.getElementById("category-filters").innerHTML = categories
+          .map(
+            (cat) =>
+              `<button onclick="setCategoryFilter('${cat}')" class="filter-pill px-5 py-2 rounded-full text-xs md:text-sm ${activeCategory === cat ? "active" : ""}"> ${cat} </button>`,
+          )
+          .join("");
+      }
+
+      function setCategoryFilter(cat) {
+        activeCategory = cat;
+        renderFilters();
+        filterItems();
+      }
+
+      function filterItems() {
+        const term = document.getElementById("searchInput").value.toLowerCase();
+        filteredList = products.filter(
+          (p) =>
+            (p.name.toLowerCase().includes(term) ||
+              (p.category || "").toLowerCase().includes(term)) &&
+            (activeCategory === "All" || p.category === activeCategory),
+        );
+        render();
+      }
+
+      function render() {
+        const grid = document.getElementById("product-grid");
+        if (filteredList.length === 0) {
+          grid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-400">No products found.</div>`;
+          return;
+        }
+
+        grid.innerHTML = filteredList
+          .map((p) => {
+            const sid = p._id || p.id || (p._doc ? p._doc._id : null);
+            return `
+            <div class="product-card p-3 md:p-4">
+              <img src="${p.emoji}" class="w-full h-24 md:h-32 object-contain mb-2 md:mb-3 p-2 bg-slate-50 rounded-xl">
+              <div class="flex-1 flex flex-col">
+                <h3 class="font-bold text-xs md:text-sm line-clamp-2 h-8 md:h-10 mb-1 leading-tight">${p.name}</h3>
+                <p class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase mb-2">${p.category || "General"}</p>
+                <div class="mt-auto flex justify-between items-end">
+                  <div>
+                    <p class="text-[9px] md:text-[10px] text-slate-400">Stock: ${p.stockQuantity || 0}</p>
+                    <p class="font-bold text-[#001F5B] text-sm md:text-base">₹${p.price}</p>
+                  </div>
+                  ${
+                    p.stockQuantity <= 0
+                      ? `<button disabled class="bg-slate-200 text-slate-400 text-[9px] md:text-[10px] font-bold px-2 md:px-3 py-1.5 md:py-2 rounded-lg">OOS</button>`
+                      : `<button onclick="addToCart('${sid}')" class="bg-[#81a6c6] text-white text-[9px] md:text-[10px] font-bold px-3 md:px-4 py-1.5 md:py-2 rounded-lg hover:bg-[#001F5B] transition">Add</button>`
+                  }
+                </div>
+              </div>
+            </div>`;
+          })
+          .join("");
+        updateCartSidebar();
+      }
+
+      function addToCart(id) {
+        const p = products.find((prod) => (prod._id || prod.id) === id);
+        if (!p) return;
+        if (!cart[id]) {
+          cart[id] = {
+            id: p._id || p.id,
+            name: p.name,
+            price: p.price,
+            qty: 0,
+          };
+        }
+        if (cart[id].qty >= p.stockQuantity) {
+          showToast(`Only ${p.stockQuantity} in stock`, "error");
+          return;
+        }
+        cart[id].qty++;
+        showToast(`${p.name} added`);
+        updateCartSidebar();
+      }
+
+      function updateQty(key, change) {
+        if (!cart[key]) return;
+        const p = products.find((prod) => (prod._id || prod.id) === key);
+        if (change > 0 && cart[key].qty >= p.stockQuantity) return;
+        cart[key].qty += change;
+        if (cart[key].qty <= 0) delete cart[key];
+        updateCartSidebar();
+      }
+
+      function clearCart() {
+        cart = {};
+        updateCartSidebar();
+      }
+
+      function toggleCart() {
+        document
+          .getElementById("cart-sidebar")
+          .classList.toggle("translate-x-full");
+      }
+
+      function updateCartSidebar() {
+        const keys = Object.keys(cart);
+        const list = document.getElementById("cart-items");
+        if (!keys.length) {
+          list.innerHTML = `<div class="text-center py-10 text-slate-400 font-medium text-sm">Your cart is empty</div>`;
+          document.getElementById("cart-total").innerText = "0";
+          document.getElementById("cart-count").innerText = "0";
+          return;
+        }
+        let total = 0,
+          count = 0;
+        list.innerHTML = keys
+          .map((k) => {
+            const i = cart[k];
+            total += i.price * i.qty;
+            count += i.qty;
+            return `
+            <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+              <div class="flex-1 pr-2">
+                <p class="font-bold text-xs md:text-sm text-slate-800 line-clamp-1">${i.name}</p>
+                <p class="text-[10px] md:text-xs text-[#001F5B] font-bold">₹${i.price * i.qty}</p>
+              </div>
+              <div class="flex items-center gap-2 md:gap-3 bg-slate-100 px-2 py-1 rounded-lg">
+                <button onclick="updateQty('${k}', -1)" class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-white rounded shadow-sm text-red-500 font-bold text-sm">-</button>
+                <span class="text-[10px] md:text-xs font-bold w-3 text-center">${i.qty}</span>
+                <button onclick="updateQty('${k}', 1)" class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-white rounded shadow-sm text-green-500 font-bold text-sm">+</button>
+              </div>
+            </div>`;
+          })
+          .join("");
+        document.getElementById("cart-total").innerText = total;
+        document.getElementById("cart-count").innerText = count;
+      }
+
+      async function generateInvoice() {
+        const keys = Object.keys(cart);
+        if (!keys.length) return showToast("Cart empty", "error");
+        let msg = "📦 *NINE2NINE ORDER*%0A";
+        let total = 0;
+        keys.forEach((k) => {
+          const i = cart[k];
+          total += i.price * i.qty;
+          msg += `• ${i.name} x${i.qty} = ₹${i.price * i.qty}%0A`;
+        });
+        msg += `%0A*TOTAL: ₹${total}*`;
+        window.open(`https://wa.me/919057563838?text=${msg}`, "_blank");
+        if (confirm("Reduce stock for this order?")) {
+          const items = keys.map((k) => ({ id: cart[k].id, qty: cart[k].qty }));
+          try {
+            const res = await fetch("/api/reduce-stock", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ items }),
+            });
+            if (res.ok) {
+              showToast("Stock updated");
+              cart = {};
+              updateCartSidebar();
+              init();
+            }
+          } catch (e) {
+            showToast("Failed to update stock", "error");
+          }
+        }
+      }
+
+      function showToast(msg, type = "success") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `px-4 py-2 md:px-6 md:py-3 rounded-xl shadow-lg text-white font-bold text-xs md:text-sm transform transition-all duration-300 ${type === "error" ? "bg-red-500" : "bg-[#001F5B]"}`;
+        toast.innerText = msg;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      function logout() {
+        localStorage.removeItem("kirana_user");
+        window.location.href = "index.html";
+      }
+    </script>
+    <footer
+      class="bg-white border-t border-slate-200 mt-12 py-8 md:py-12 px-4 md:px-6"
+    >
+      <div
+        class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 text-center md:text-left"
+      >
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold text-[#001F5B] mb-3 md:mb-4">
+            13 Years of Trust
+          </h2>
+          <p class="text-sm md:text-base text-slate-600 leading-relaxed">
+            For over 13 years, <strong>nine2nine Supermarket</strong> has been a
+            cornerstone of the Jodhpur community. Every item is priced below
+            MRP.
+          </p>
+        </div>
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold text-[#001F5B] mb-3 md:mb-4">
+            Find Us
+          </h2>
+          <p class="font-bold text-slate-800 text-xs md:text-sm italic">
+            📍 Roop Nagar, Bhadu Market, Jodhpur, Rajasthan 342003
+          </p>
+          <p class="font-bold text-slate-800 text-xs md:text-sm mt-2">
+            📞 Praveen: +91 9414411960 | Sanjay: +91 9509750929
+          </p>
+        </div>
+      </div>
+      <div
+        class="max-w-6xl mx-auto mt-8 md:mt-12 pt-6 md:pt-8 border-t border-slate-100 text-center text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest"
+      >
+        © 2026 nine2nine Supermarket Jodhpur
+      </div>
+    </footer>
+  </body>
+</html>
