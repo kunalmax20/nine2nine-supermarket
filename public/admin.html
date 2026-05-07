@@ -202,18 +202,24 @@
       // LOAD ADMIN DATA
       window.onload = function () {
         const userStr = localStorage.getItem("kirana_user");
+
         if (!userStr) {
           window.location.href = "index.html";
           return;
         }
 
         currentUser = JSON.parse(userStr);
+
+        // normalize phone
+        currentUser.phone = String(currentUser.phone).replace(/\D/g, "");
+
         if (!currentUser.isAdmin) {
           window.location.href = "index.html";
           return;
         }
 
         document.getElementById("security-check").classList.add("hidden");
+
         loadAdmin();
       };
 
@@ -339,7 +345,7 @@
         btn.disabled = true;
 
         const fd = new FormData();
-        fd.append("phone", currentUser.phone);
+        fd.append("phone", String(currentUser.phone).replace(/\D/g, ""));
         fd.append("name", name);
         fd.append("category", category);
         fd.append("unit", unit);
@@ -378,7 +384,7 @@
         const opts = [...product.options];
         opts[index].stock += Number(add);
         const fd = new FormData();
-        fd.append("phone", currentUser.phone);
+        fd.append("phone", String(currentUser.phone).replace(/\D/g, ""));
         fd.append("id", prodId);
         fd.append("options", JSON.stringify(opts));
         const res = await fetch("/api/update-product", {
@@ -401,7 +407,7 @@
           { size, price: Number(price), stock: Number(stock) },
         ];
         const fd = new FormData();
-        fd.append("phone", currentUser.phone);
+        fd.append("phone", String(currentUser.phone).replace(/\D/g, ""));
         fd.append("id", id);
         fd.append("options", JSON.stringify(opts));
         const res = await fetch("/api/update-product", {
@@ -416,7 +422,7 @@
         const product = products.find((p) => p._id === prodId);
         const opts = product.options.filter((_, i) => i !== index);
         const fd = new FormData();
-        fd.append("phone", currentUser.phone);
+        fd.append("phone", String(currentUser.phone).replace(/\D/g, ""));
         fd.append("id", prodId);
         fd.append("options", JSON.stringify(opts));
         const res = await fetch("/api/update-product", {
@@ -428,7 +434,7 @@
 
       async function updateProduct(id, field, value) {
         const fd = new FormData();
-        fd.append("phone", currentUser.phone);
+        fd.append("phone", String(currentUser.phone).replace(/\D/g, ""));
         fd.append("id", id);
         fd.append(field, Number(value));
         const res = await fetch("/api/update-product", {
@@ -440,7 +446,7 @@
 
       async function restockProduct(id, value) {
         const fd = new FormData();
-        fd.append("phone", currentUser.phone);
+        fd.append("phone", String(currentUser.phone).replace(/\D/g, ""));
         fd.append("id", id);
         fd.append("stockQuantity", Number(value));
         const res = await fetch("/api/update-product", {
@@ -453,7 +459,7 @@
       async function updateProductImage(id, file) {
         if (!file) return;
         const fd = new FormData();
-        fd.append("phone", currentUser.phone);
+        fd.append("phone", String(currentUser.phone).replace(/\D/g, ""));
         fd.append("id", id);
         fd.append("productImage", file);
         const img = document.getElementById(`img-${id}`);
@@ -476,7 +482,10 @@
         await fetch("/api/delete-product", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: currentUser.phone, id }),
+          body: JSON.stringify({
+            phone: String(currentUser.phone).replace(/\D/g, ""),
+            id,
+          }),
         });
         loadAdmin();
       }

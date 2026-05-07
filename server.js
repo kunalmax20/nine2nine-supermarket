@@ -47,10 +47,28 @@ const ADMIN_PASSWORD = "nine2nine";
 const isAdmin = (phone) => ADMIN_NUMBERS.includes(String(phone));
 
 // LOGIN
+// LOGIN
 app.post("/api/login", (req, res) => {
   const { phone, password } = req.body;
-  const adminStatus = isAdmin(phone) && password === ADMIN_PASSWORD;
-  res.json({ success: true, isAdmin: adminStatus, phone });
+
+  // normalize phone
+  const cleanPhone = String(phone).replace(/\D/g, "");
+
+  const adminStatus = isAdmin(cleanPhone) && password === ADMIN_PASSWORD;
+
+  // Wrong admin password
+  if (!adminStatus && password) {
+    return res.json({
+      success: false,
+      message: "Wrong admin password",
+    });
+  }
+
+  res.json({
+    success: true,
+    isAdmin: adminStatus,
+    phone: cleanPhone,
+  });
 });
 
 // GET PRODUCTS
@@ -109,7 +127,12 @@ app.post(
       res.json({ success: true });
     } catch (err) {
       console.error("🔥 ADD ERROR:", err);
-      res.status(500).json({ success: false });
+      console.error("MESSAGE:", err.message);
+
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
     }
   },
 );
