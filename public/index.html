@@ -21,6 +21,7 @@
       .logo-pink {
         color: #ff87b9;
       }
+
       .product-card {
         background-color: #ffffff;
         border-radius: 1.5rem;
@@ -34,9 +35,46 @@
         border-color: #81a6c6;
         box-shadow: 0 10px 20px rgba(129, 166, 198, 0.1);
       }
+
+      /* Floating Header Box */
       header {
-        background-color: #81a6c6 !important;
+        background-color: transparent !important;
       }
+      .nav-box {
+        background-color: #81a6c6;
+        border-radius: 2rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+
+      /* CATEGORY BUBBLE STYLING */
+      #category-filters button {
+        background-color: #ffffff !important;
+        color: #001f5b !important;
+        border: 1.5px solid rgba(129, 166, 198, 0.4) !important;
+        border-radius: 9999px !important;
+        padding: 0.5rem 1.25rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
+        white-space: nowrap !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        margin-right: 8px;
+      }
+
+      #category-filters button:hover {
+        border-color: #81a6c6 !important;
+        background-color: #f0f7ff !important;
+        transform: translateY(-2px) !important;
+      }
+
+      #category-filters button.active {
+        background-color: #001f5b !important;
+        color: #ffffff !important;
+        border-color: #001f5b !important;
+        box-shadow: 0 4px 10px rgba(0, 31, 91, 0.25) !important;
+      }
+
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -105,68 +143,69 @@
       class="fixed top-20 right-5 z-[150] space-y-3 pointer-events-none"
     ></div>
 
-    <header
-      id="main-header"
-      class="sticky top-0 z-[80] p-3 md:p-4 shadow-sm hidden"
-    >
-      <div
-        class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3"
-      >
-        <h1
-          class="text-xl md:text-2xl font-bold tracking-tighter shrink-0 cursor-pointer"
-          onclick="location.reload()"
-        >
-          <span class="text-white">nine</span><span class="logo-pink">2</span
-          ><span class="text-white">nine</span>
-        </h1>
-        <div class="order-3 md:order-2 w-full md:w-auto md:flex-1 md:max-w-xs">
-          <input
-            type="text"
-            id="searchInput"
-            oninput="filterItems()"
-            placeholder="Search items..."
-            class="w-full pl-4 pr-4 py-2 bg-white/20 text-white placeholder-white/70 rounded-full border-none focus:ring-2 focus:ring-white text-sm outline-none"
-          />
-        </div>
-        <div class="order-2 md:order-3 flex items-center gap-2 md:gap-4">
-          <a
-            id="admin-gear"
-            href="admin.html"
-            class="hidden p-2 text-white/70 hover:text-white transition"
+    <header id="main-header" class="sticky top-0 z-[80] hidden p-2">
+      <div class="nav-box max-w-6xl mx-auto p-3 md:p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h1
+            class="text-xl md:text-2xl font-bold tracking-tighter shrink-0 cursor-pointer"
+            onclick="location.reload()"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <span class="text-white">nine</span><span class="logo-pink">2</span
+            ><span class="text-white">nine</span>
+          </h1>
+
+          <div
+            class="order-3 md:order-2 w-full md:w-auto md:flex-1 md:max-w-xs"
+          >
+            <input
+              type="text"
+              id="searchInput"
+              oninput="filterItems()"
+              placeholder="Search items..."
+              class="w-full pl-4 pr-4 py-2 bg-white/20 text-white placeholder-white/70 rounded-full border-none focus:ring-2 focus:ring-white text-sm outline-none"
+            />
+          </div>
+
+          <div class="order-2 md:order-3 flex items-center gap-2 md:gap-4">
+            <a
+              id="admin-gear"
+              href="admin.html"
+              class="hidden p-2 text-white/70 hover:text-white transition"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-              />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-          </a>
-          <button
-            onclick="logout()"
-            class="text-[10px] text-white/70 font-bold hover:text-white transition uppercase"
-          >
-            Logout
-          </button>
-          <button
-            onclick="toggleCart()"
-            class="bg-white text-[#001F5B] px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-md text-sm"
-          >
-            🛒 <span id="cart-count">0</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </a>
+            <button
+              onclick="logout()"
+              class="text-[10px] text-white/70 font-bold hover:text-white transition uppercase"
+            >
+              Logout
+            </button>
+            <button
+              onclick="toggleCart()"
+              class="bg-white text-[#001F5B] px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-md text-sm"
+            >
+              🛒 <span id="cart-count">0</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -299,7 +338,7 @@
         document.getElementById("category-filters").innerHTML = categories
           .map(
             (cat) =>
-              `<button onclick="setCategoryFilter('${cat}')" class="filter-pill px-5 py-2 rounded-full text-xs font-bold ${activeCategory === cat ? "active" : ""}"> ${cat} </button>`,
+              `<button onclick="setCategoryFilter('${cat}')" class="${activeCategory === cat ? "active" : ""}"> ${cat} </button>`,
           )
           .join("");
       }
@@ -370,17 +409,17 @@
                 `</div>`;
             }
             return `<div class="product-card p-3 md:p-4" data-prod-id="${sid}">
-              <img src="${p.emoji}" class="w-full h-28 object-contain mb-3 p-2 bg-slate-50 rounded-xl">
-              <div class="flex-1 flex flex-col">
-                <h3 class="font-bold text-xs md:text-sm line-clamp-2 h-10 mb-1 leading-tight">${p.name}</h3>
-                <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">${p.category || "General"}</p>
-                ${optionsHtml}
-                <div class="mt-auto flex justify-between items-end">
-                  <div><p class="display-stock text-[9px] text-slate-400">Stock: ${initialStock}</p><p class="display-price font-bold text-[#001F5B] text-sm md:text-base">₹${initialPrice}</p></div>
-                  <button onclick="addToCart('${sid}')" ${initialStock <= 0 ? "disabled" : ""} class="add-btn ${initialStock <= 0 ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-[#81a6c6] text-white hover:bg-[#001F5B]"} text-[10px] font-bold px-4 py-2 rounded-lg transition">${initialStock <= 0 ? "OOS" : "Add"}</button>
-                </div>
+            <img src="${p.emoji}" class="w-full h-28 object-contain mb-3 p-2 bg-slate-50 rounded-xl">
+            <div class="flex-1 flex flex-col">
+              <h3 class="font-bold text-xs md:text-sm line-clamp-2 h-10 mb-1 leading-tight">${p.name}</h3>
+              <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">${p.category || "General"}</p>
+              ${optionsHtml}
+              <div class="mt-auto flex justify-between items-end">
+                <div><p class="display-stock text-[9px] text-slate-400">Stock: ${initialStock}</p><p class="display-price font-bold text-[#001F5B] text-sm md:text-base">₹${initialPrice}</p></div>
+                <button onclick="addToCart('${sid}')" ${initialStock <= 0 ? "disabled" : ""} class="add-btn ${initialStock <= 0 ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-[#81a6c6] text-white hover:bg-[#001F5B]"} text-[10px] font-bold px-4 py-2 rounded-lg transition">${initialStock <= 0 ? "OOS" : "Add"}</button>
               </div>
-            </div>`;
+            </div>
+          </div>`;
           })
           .join("");
         updateCartSidebar();
@@ -390,25 +429,19 @@
         const p = products.find((prod) => (prod._id || prod.id) === id);
         const card = document.querySelector(`[data-prod-id="${id}"]`);
         const activePill = card.querySelector(".size-pill.active");
-
-        // FIXED LOGIC: If there is an active variant pill, use that size.
-        // If NOT, use the keyword "Standard".
         const selectedSize = activePill
           ? activePill.innerText.trim()
           : "Standard";
-
         const currentPrice = Number(
           card.querySelector(".display-price").innerText.replace("₹", ""),
         );
         const currentStock = Number(
           card.querySelector(".display-stock").innerText.replace("Stock: ", ""),
         );
-
         const cartKey = `${id}-${selectedSize}`;
-
         if (!cart[cartKey]) {
           cart[cartKey] = {
-            id: id,
+            id,
             name: p.name,
             size: selectedSize,
             price: currentPrice,
@@ -416,11 +449,8 @@
             maxStock: currentStock,
           };
         }
-
-        if (cart[cartKey].qty >= currentStock) {
+        if (cart[cartKey].qty >= currentStock)
           return showToast(`Only ${currentStock} available`, "error");
-        }
-
         cart[cartKey].qty++;
         showToast(`${p.name} added`);
         updateCartSidebar();
@@ -462,109 +492,84 @@
             subtotal += i.price * i.qty;
             count += i.qty;
             return `<div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-              <div class="flex-1 pr-2"><p class="font-bold text-xs text-slate-800 line-clamp-1">${i.name}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${i.size}</p><p class="text-xs text-[#001F5B] font-bold">₹${i.price * i.qty}</p></div>
-              <div class="flex items-center gap-2 bg-slate-100 px-2 py-1 rounded-lg">
-                <button onclick="updateQty('${k}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-red-500 font-bold">-</button>
-                <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
-                <button onclick="updateQty('${k}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-green-500 font-bold">+</button>
-              </div>
-            </div>`;
+            <div class="flex-1 pr-2"><p class="font-bold text-xs text-slate-800 line-clamp-1">${i.name}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${i.size}</p><p class="text-xs text-[#001F5B] font-bold">₹${i.price * i.qty}</p></div>
+            <div class="flex items-center gap-2 bg-slate-100 px-2 py-1 rounded-lg">
+              <button onclick="updateQty('${k}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-red-500 font-bold">-</button>
+              <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
+              <button onclick="updateQty('${k}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-green-500 font-bold">+</button>
+            </div>
+          </div>`;
           })
           .join("");
-
         const deliveryFee = subtotal >= 2000 ? 0 : 60;
-        const grandTotal = subtotal + deliveryFee;
-        const deliveryHtml =
-          deliveryFee === 0
-            ? `<span class="text-green-600 font-bold">FREE</span>`
-            : `₹${deliveryFee}`;
-        const freeShippingMessage =
+        document.getElementById("cart-total").innerText =
+          subtotal + deliveryFee;
+        document.getElementById("cart-count").innerText = count;
+        const freeMsg =
           subtotal < 2000
             ? `<p class="text-[10px] text-orange-500 font-bold mt-1 text-center">Add ₹${2000 - subtotal} more for FREE delivery!</p>`
-            : `<p class="text-[10px] text-green-600 font-bold mt-1 text-center">Yay! You got Free Delivery!</p>`;
-        document.getElementById("cart-total").innerText = grandTotal;
-        document.getElementById("cart-count").innerText = count;
+            : `<p class="text-[10px] text-green-600 font-bold mt-1 text-center">Free Delivery Applied!</p>`;
         list.insertAdjacentHTML(
           "beforeend",
-          `<div class="mt-4 p-3 bg-white/50 rounded-xl border border-dashed border-slate-300"><div class="flex justify-between text-xs text-slate-500 mb-1"><span>Subtotal:</span> <span>₹${subtotal}</span></div><div class="flex justify-between text-xs text-slate-500"><span>Delivery Fee:</span> <span>${deliveryHtml}</span></div>${freeShippingMessage}</div>`,
+          `<div class="mt-4 p-3 bg-white/50 rounded-xl border border-dashed border-slate-300"><div class="flex justify-between text-xs text-slate-500 mb-1"><span>Subtotal:</span> <span>₹${subtotal}</span></div><div class="flex justify-between text-xs text-slate-500"><span>Delivery Fee:</span> <span>${deliveryFee === 0 ? "FREE" : "₹" + deliveryFee}</span></div>${freeMsg}</div>`,
         );
       }
-      // GLOBAL VARIABLE to hold keys temporarily
-      let pendingOrderKeys = null;
 
+      let pendingOrderKeys = null;
       async function generateInvoice() {
         const keys = Object.keys(cart);
         if (!keys.length) return showToast("Cart empty", "error");
-
-        let subtotal = 0;
-        let msg = "📦 *NINE2NINE ORDER*%0A%0A";
+        let subtotal = 0,
+          msg = "📦 *NINE2NINE ORDER*%0A%0A";
         keys.forEach((k) => {
           const i = cart[k];
           subtotal += i.price * i.qty;
           msg += `• *${i.name}* (${i.size})%0A   ${i.qty} x ₹${i.price} = ₹${i.price * i.qty}%0A`;
         });
-
         const deliveryFee = subtotal >= 2000 ? 0 : 60;
-        const grandTotal = subtotal + deliveryFee;
-        msg += `%0A--------------------------%0A`;
-        msg += `Subtotal: ₹${subtotal}%0A`;
-        msg += `Delivery Fee: ${deliveryFee === 0 ? "FREE" : "₹" + deliveryFee}%0A`;
-        msg += `*TOTAL AMOUNT: ₹${grandTotal}*%0A`;
-        msg += `--------------------------%0A`;
-
-        // Save keys to global variable for the confirmation modal
+        msg += `%0A--------------------------%0ASubtotal: ₹${subtotal}%0ADelivery Fee: ${deliveryFee === 0 ? "FREE" : "₹" + deliveryFee}%0A*TOTAL: ₹${subtotal + deliveryFee}*%0A--------------------------%0A`;
         pendingOrderKeys = keys;
-
-        // Open WhatsApp
         window.open(`https://wa.me/919057563838?text=${msg}`, "_blank");
-
-        // Show the confirmation modal after a short delay so it's there when they return
-        setTimeout(() => {
-          document.getElementById("order-modal").classList.remove("hidden");
-        }, 1000);
+        setTimeout(
+          () =>
+            document.getElementById("order-modal").classList.remove("hidden"),
+          1000,
+        );
       }
 
       async function confirmOrder(isSuccess) {
-        // Hide the modal
         document.getElementById("order-modal").classList.add("hidden");
-
         if (isSuccess && pendingOrderKeys) {
           const items = pendingOrderKeys.map((k) => ({
             id: cart[k].id,
             qty: cart[k].qty,
             size: cart[k].size,
           }));
-
           try {
             const res = await fetch("/api/reduce-stock", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ items }),
             });
-
             if (res.ok) {
-              showToast("Order Confirmed! Stock Updated.");
-              cart = {}; // Empty the cart
+              showToast("Order Confirmed!");
+              cart = {};
               updateCartSidebar();
               if (
                 !document
                   .getElementById("cart-sidebar")
                   .classList.contains("translate-x-full")
-              ) {
+              )
                 toggleCart();
-              }
-              init(); // Refresh shop to show updated stock
+              init();
             }
-          } catch (e) {
-            showToast("Failed to update stock", "error");
+          } catch {
+            showToast("Stock error", "error");
           }
-        } else {
-          showToast("Stock not reduced. Items kept in cart.", "error");
         }
-
-        // Reset global variable
         pendingOrderKeys = null;
       }
+
       function showToast(msg, type = "success") {
         const container = document.getElementById("toast-container");
         const toast = document.createElement("div");
@@ -582,6 +587,7 @@
         window.location.href = "index.html";
       }
     </script>
+
     <footer class="bg-white border-t border-slate-200 mt-12 py-12 px-6">
       <div
         class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 text-center md:text-left"
@@ -591,8 +597,7 @@
             13 Years of Trust
           </h2>
           <p class="text-slate-600 leading-relaxed">
-            For over 13 years, <strong>nine2nine Supermarket</strong> has been a
-            cornerstone of the Jodhpur community. Every item is priced below
+            Cornerstone of the Jodhpur community. Every item is priced below
             MRP.
           </p>
         </div>
@@ -611,6 +616,7 @@
       >
         © 2026 nine2nine Supermarket Jodhpur
       </div>
+
       <div
         id="order-modal"
         class="fixed inset-0 bg-black/60 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-sm"
@@ -630,7 +636,7 @@
               onclick="confirmOrder(false)"
               class="py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition text-sm"
             >
-              No, I Clicked back
+              No, Back
             </button>
             <button
               onclick="confirmOrder(true)"
