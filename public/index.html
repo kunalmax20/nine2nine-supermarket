@@ -589,63 +589,63 @@
     </script>
 
     <footer class="bg-white border-t border-slate-200 mt-12 py-12 px-6">
-      <div
-        class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 text-center md:text-left"
-      >
-        <div>
+      <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div class="text-center md:text-left">
           <h2 class="text-2xl font-bold text-[#001F5B] mb-4">
-            13 Years of Trust
+            13 Years of People's Trust
           </h2>
-          <p class="text-slate-600 leading-relaxed">
-            Cornerstone of the Jodhpur community. Every item is priced below
-            MRP.
+          <p class="text-slate-600 leading-relaxed text-sm">
+            Serving the Jodhpur community for over <strong>13 years</strong>,
+            <strong>nine2nine Supermarket</strong> has become a symbol of
+            reliability and trust. We take pride in offering
+            <strong>guaranteed discounts</strong> on every item, ensuring you
+            always pay <strong>less than the MRP</strong>. With our friendly,
+            helping staff and lightning-fast billing, we make your shopping
+            smooth and affordable.
           </p>
         </div>
-        <div>
+
+        <div class="text-center md:text-left">
           <h2 class="text-2xl font-bold text-[#001F5B] mb-4">Find Us</h2>
-          <p class="font-bold text-slate-800 text-sm italic">
+          <p
+            class="text-slate-800 text-sm font-bold flex items-center justify-center md:justify-start gap-2 mb-3"
+          >
             📍 Roop Nagar, Bhadu Market, Jodhpur, Rajasthan 342003
           </p>
-          <p class="font-bold text-slate-800 text-sm mt-2">
-            📞 Praveen: +91 9414411960 | Sanjay: +91 9509750929
+          <div class="space-y-1">
+            <p class="text-slate-700 text-sm font-semibold">
+              📞 Praveen: +91 9414411960
+            </p>
+            <p class="text-slate-700 text-sm font-semibold">
+              📞 Sanjay: +91 9509750929
+            </p>
+          </div>
+          <p
+            class="mt-4 text-[10px] text-[#81a6c6] font-bold uppercase tracking-widest"
+          >
+            Open 7 Days a Week
           </p>
         </div>
+
+        <div
+          class="rounded-2xl overflow-hidden shadow-md border border-slate-100 h-48 md:h-full min-h-[200px]"
+        >
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3578.469696360045!2d72.9686475!3d26.246415199999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39418f7ba1d5183d%3A0xbf567555970824fd!2sNine%202%20Nine%20Super%20Market!5e0!3m2!1sen!2sin!4v1778184274179!5m2!1sen!2sin"
+            class="w-full h-full"
+            style="border: 0"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          >
+          </iframe>
+        </div>
       </div>
+
       <div
         class="max-w-6xl mx-auto mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-xs font-bold uppercase tracking-widest"
       >
         © 2026 nine2nine Supermarket Jodhpur
-      </div>
-
-      <div
-        id="order-modal"
-        class="fixed inset-0 bg-black/60 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-sm"
-      >
-        <div
-          class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center"
-        >
-          <div class="text-4xl mb-4">📲</div>
-          <h3 class="text-xl font-bold text-slate-800 mb-2">
-            Check Order Status
-          </h3>
-          <p class="text-sm text-slate-500 mb-6">
-            Did you successfully send the order message on WhatsApp?
-          </p>
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              onclick="confirmOrder(false)"
-              class="py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition text-sm"
-            >
-              No, Back
-            </button>
-            <button
-              onclick="confirmOrder(true)"
-              class="py-3 rounded-xl font-bold text-white bg-[#001F5B] hover:bg-[#001540] transition text-sm shadow-lg shadow-blue-900/20"
-            >
-              Yes, Ordered
-            </button>
-          </div>
-        </div>
       </div>
     </footer>
   </body>
