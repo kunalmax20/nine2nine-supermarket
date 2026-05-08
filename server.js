@@ -207,4 +207,45 @@ app.post("/api/delete-product", async (req, res) => {
   res.json({ success: true });
 });
 
+const Review = require("./models/Review");
+
+// PUBLIC: Get all reviews
+app.get("/api/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find().sort({ date: -1 });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// PUBLIC: Post a new review
+app.post("/api/add-review", async (req, res) => {
+  try {
+    const newReview = new Review(req.body);
+    await newReview.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// ADMIN ONLY: Reply to a review
+app.post("/api/reply-review", async (req, res) => {
+  const { phone, reviewId, replyText } = req.body;
+  if (!ADMIN_NUMBERS.includes(phone))
+    return res.status(403).send("Unauthorized");
+  await Review.findByIdAndUpdate(reviewId, { reply: replyText });
+  res.json({ success: true });
+});
+
+// ADMIN ONLY: Delete a review
+app.post("/api/delete-review", async (req, res) => {
+  const { phone, reviewId } = req.body;
+  if (!ADMIN_NUMBERS.includes(phone))
+    return res.status(403).send("Unauthorized");
+  await Review.findByIdAndDelete(reviewId);
+  res.json({ success: true });
+});
+
 app.listen(PORT, () => console.log(`🚀 LIVE ON PORT ${PORT}`));

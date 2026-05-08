@@ -224,6 +224,74 @@
       ></div>
     </main>
 
+    <section id="review-section" class="max-w-6xl mx-auto px-4 mt-12 hidden">
+      <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-[#001F5B]">Customer Feedback</h2>
+          <button
+            onclick="
+              document.getElementById('review-modal').classList.remove('hidden')
+            "
+            class="bg-[#81a6c6] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-sm hover:bg-[#001F5B] transition"
+          >
+            Write a Review
+          </button>
+        </div>
+        <div
+          id="reviews-display"
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
+        ></div>
+      </div>
+    </section>
+
+    <div
+      id="review-modal"
+      class="fixed inset-0 bg-black/60 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-sm"
+    >
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+        <h3 class="text-xl font-bold text-slate-800 mb-4">
+          Share your Experience
+        </h3>
+        <input
+          id="rev-name"
+          type="text"
+          placeholder="Your Name"
+          class="w-full p-3 bg-slate-100 rounded-xl mb-3 outline-none font-bold text-sm"
+        />
+        <select
+          id="rev-rating"
+          class="w-full p-3 bg-slate-100 rounded-xl mb-3 outline-none font-bold text-sm"
+        >
+          <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+          <option value="4">⭐⭐⭐⭐ (Good)</option>
+          <option value="3">⭐⭐⭐ (Average)</option>
+          <option value="2">⭐⭐ (Poor)</option>
+          <option value="1">⭐ (Terrible)</option>
+        </select>
+        <textarea
+          id="rev-comment"
+          placeholder="Tell us what you think..."
+          class="w-full p-3 bg-slate-100 rounded-xl mb-4 outline-none font-medium text-sm h-24"
+        ></textarea>
+        <div class="flex gap-2">
+          <button
+            onclick="
+              document.getElementById('review-modal').classList.add('hidden')
+            "
+            class="flex-1 py-3 font-bold text-slate-400 text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="submitReview()"
+            class="flex-1 py-3 bg-[#001F5B] text-white rounded-xl font-bold text-sm shadow-lg"
+          >
+            Post Review
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div
       id="cart-sidebar"
       class="fixed right-0 top-0 h-full w-full md:w-96 bg-[#F3E3D0] shadow-2xl z-[200] transform translate-x-full transition-transform duration-300 p-6 flex flex-col"
@@ -309,12 +377,18 @@
         }
         currentUser = JSON.parse(userStr);
         document.getElementById("login-overlay").classList.add("hidden");
-        ["main-header", "filter-bar-container", "main-content"].forEach((id) =>
+        [
+          "main-header",
+          "filter-bar-container",
+          "main-content",
+          "review-section",
+        ].forEach((id) =>
           document.getElementById(id).classList.remove("hidden"),
         );
         if (currentUser.isAdmin)
           document.getElementById("admin-gear").classList.remove("hidden");
         init();
+        loadReviews();
       }
 
       document.addEventListener("DOMContentLoaded", setupUI);
@@ -327,6 +401,57 @@
           renderFilters();
         } catch {
           showToast("Failed to load products", "error");
+        }
+      }
+
+      // REVIEWS JS
+      async function loadReviews() {
+        try {
+          const res = await fetch("/api/reviews");
+          const data = await res.json();
+          const container = document.getElementById("reviews-display");
+          if (!data.length) {
+            container.innerHTML =
+              "<p class='text-slate-400 text-sm italic'>No reviews yet. Be the first!</p>";
+            return;
+          }
+          container.innerHTML = data
+            .map(
+              (r) => `
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
+              <div class="flex justify-between items-start">
+                <p class="font-bold text-sm text-[#001F5B]">${r.userName}</p>
+                <p class="text-xs text-orange-400">${"⭐".repeat(r.rating)}</p>
+              </div>
+              <p class="text-slate-600 text-xs italic font-medium leading-relaxed">"${r.comment}"</p>
+              ${r.reply ? `<div class="mt-2 p-2 bg-blue-50 rounded-lg border-l-2 border-[#81a6c6]"><p class="text-[9px] font-bold text-[#001F5B] uppercase">Shop Reply:</p><p class="text-[10px] text-slate-600 font-medium">${r.reply}</p></div>` : ""}
+            </div>
+          `,
+            )
+            .join("");
+        } catch (e) {
+          console.error("Review Load Error", e);
+        }
+      }
+
+      async function submitReview() {
+        const userName = document.getElementById("rev-name").value;
+        const rating = document.getElementById("rev-rating").value;
+        const comment = document.getElementById("rev-comment").value;
+        if (!userName || !comment)
+          return alert("Please fill your name and comment.");
+
+        const res = await fetch("/api/add-review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userName, rating, comment }),
+        });
+        if ((await res.json()).success) {
+          document.getElementById("review-modal").classList.add("hidden");
+          document.getElementById("rev-name").value = "";
+          document.getElementById("rev-comment").value = "";
+          loadReviews();
+          showToast("Review posted! Thank you.");
         }
       }
 
@@ -411,7 +536,7 @@
             return `<div class="product-card p-3 md:p-4" data-prod-id="${sid}">
             <img src="${p.emoji}" class="w-full h-28 object-contain mb-3 p-2 bg-slate-50 rounded-xl">
             <div class="flex-1 flex flex-col">
-              <h3 class="font-bold text-xs md:text-sm line-clamp-2 h-10 mb-1 leading-tight">${p.name}</h3>
+              <h3 class="font-bold text-xs md:text-sm line-clamp-2 h-10 mb-1 leading-tight text-slate-800">${p.name}</h3>
               <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">${p.category || "General"}</p>
               ${optionsHtml}
               <div class="mt-auto flex justify-between items-end">
@@ -526,8 +651,8 @@
           subtotal += i.price * i.qty;
           msg += `• *${i.name}* (${i.size})%0A   ${i.qty} x ₹${i.price} = ₹${i.price * i.qty}%0A`;
         });
-        const deliveryFee = subtotal >= 2000 ? 0 : 60;
-        msg += `%0A--------------------------%0ASubtotal: ₹${subtotal}%0ADelivery Fee: ${deliveryFee === 0 ? "FREE" : "₹" + deliveryFee}%0A*TOTAL: ₹${subtotal + deliveryFee}*%0A--------------------------%0A`;
+        const dFee = subtotal >= 2000 ? 0 : 60;
+        msg += `%0A--------------------------%0ASubtotal: ₹${subtotal}%0ADelivery Fee: ${dFee === 0 ? "FREE" : "₹" + dFee}%0A*TOTAL: ₹${subtotal + dFee}*%0A--------------------------%0A`;
         pendingOrderKeys = keys;
         window.open(`https://wa.me/919057563838?text=${msg}`, "_blank");
         setTimeout(
@@ -595,16 +720,12 @@
             13 Years of People's Trust
           </h2>
           <p class="text-slate-600 leading-relaxed text-sm">
-            Serving the Jodhpur community for over <strong>13 years</strong>,
-            <strong>nine2nine Supermarket</strong> has become a symbol of
-            reliability and trust. We take pride in offering
-            <strong>guaranteed discounts</strong> on every item, ensuring you
-            always pay <strong>less than the MRP</strong>. With our friendly,
-            helping staff and lightning-fast billing, we make your shopping
-            smooth and affordable.
+            Serving Jodhpur for over <strong>13 years</strong>,
+            <strong>nine2nine Supermarket</strong> is built on trust. We offer
+            <strong>guaranteed discounts</strong> below MRP. Friendly staff and
+            fast billing included.
           </p>
         </div>
-
         <div class="text-center md:text-left">
           <h2 class="text-2xl font-bold text-[#001F5B] mb-4">Find Us</h2>
           <p
@@ -621,12 +742,11 @@
             </p>
           </div>
           <p
-            class="mt-4 text-[10px] text-[#81a6c6] font-bold uppercase tracking-widest"
+            class="mt-4 text-[10px] text-[#81a6c6] font-bold uppercase tracking-widest tracking-widest"
           >
             Open 7 Days a Week
           </p>
         </div>
-
         <div
           class="rounded-2xl overflow-hidden shadow-md border border-slate-100 h-48 md:h-full min-h-[200px]"
         >
@@ -637,15 +757,44 @@
             allowfullscreen=""
             loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"
-          >
-          </iframe>
+          ></iframe>
         </div>
       </div>
-
       <div
         class="max-w-6xl mx-auto mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-xs font-bold uppercase tracking-widest"
       >
         © 2026 nine2nine Supermarket Jodhpur
+      </div>
+
+      <div
+        id="order-modal"
+        class="fixed inset-0 bg-black/60 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-sm"
+      >
+        <div
+          class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center"
+        >
+          <div class="text-4xl mb-4">📲</div>
+          <h3 class="text-xl font-bold text-slate-800 mb-2">
+            Check Order Status
+          </h3>
+          <p class="text-sm text-slate-500 mb-6">
+            Did you successfully send the message on WhatsApp?
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              onclick="confirmOrder(false)"
+              class="py-3 rounded-xl font-bold text-slate-500 bg-slate-100 text-sm"
+            >
+              No, Back
+            </button>
+            <button
+              onclick="confirmOrder(true)"
+              class="py-3 rounded-xl font-bold text-white bg-[#001F5B] text-sm shadow-lg"
+            >
+              Yes, Ordered
+            </button>
+          </div>
+        </div>
       </div>
     </footer>
   </body>
