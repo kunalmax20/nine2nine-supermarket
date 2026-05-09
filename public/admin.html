@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nine2Nine | Admin Inventory</title>
+    <title>nine2nine | Admin Inventory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
@@ -66,9 +66,9 @@
         <h1
           class="text-2xl md:text-3xl font-bold tracking-tighter text-center md:text-left"
         >
-          <span class="text-[#001F5B]">Nine</span
+          <span class="text-[#001F5B]">nine</span
           ><span class="logo-pink">2</span
-          ><span class="text-[#001F5B]">Nine</span>
+          ><span class="text-[#001F5B]">nine</span>
           <span
             class="block text-[10px] md:text-xs text-[#81a6c6] uppercase tracking-widest font-bold"
             >Inventory Manager</span
@@ -266,6 +266,7 @@
           list.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-400">No products found</td></tr>`;
           return;
         }
+
         list.innerHTML = products
           .map((p) => {
             let variantHtml = "";
@@ -286,6 +287,15 @@
                   .join("") +
                 `</div>`;
             }
+
+            // Build Category Options for the Dropdown
+            const categoryOptions = categories
+              .map(
+                (c) =>
+                  `<option value="${c}" ${p.category === c ? "selected" : ""}>${c}</option>`,
+              )
+              .join("");
+
             return `<tr class="hover:bg-slate-50 transition border-b border-slate-50">
             <td class="p-5 flex gap-4 items-center">
                 <div class="relative group w-12 h-12 shrink-0">
@@ -299,7 +309,13 @@
                 </div>
                 <div class="min-w-0">
                   <p class="font-bold text-sm text-[#001F5B] truncate">${p.name}</p>
-                  <p class="text-[10px] font-bold text-[#81a6c6] uppercase">${p.category} | ${p.unit || "Unit"}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <select onchange="updateProduct('${p._id}', 'category', this.value)" class="text-[9px] font-bold text-[#81a6c6] uppercase bg-transparent border-none p-0 cursor-pointer focus:ring-0">
+                      ${categoryOptions}
+                    </select>
+                    <span class="text-slate-300 text-[10px]">|</span>
+                    <input type="text" value="${p.unit || "Unit"}" onchange="updateProduct('${p._id}', 'unit', this.value)" class="bg-transparent text-[10px] font-bold text-[#81a6c6] uppercase w-12 border-none p-0 focus:ring-0">
+                  </div>
                   ${variantHtml}
                   <button onclick="addVariantPrompt('${p._id}')" class="mt-2 text-[9px] font-bold text-blue-500 uppercase flex items-center gap-1">+ Add Size Variant</button>
                 </div>
@@ -366,7 +382,6 @@
         }
       }
 
-      // REVIEWS MANAGEMENT FUNCTIONS
       async function loadAdminReviews() {
         try {
           const res = await fetch("/api/reviews");
@@ -431,7 +446,6 @@
         if ((await res.json()).success) loadAdminReviews();
       }
 
-      // PRODUCT FUNCTIONS
       async function updateVariantStockPrompt(prodId, index) {
         const add = prompt("Enter amount to ADD (e.g. 10 or -5):");
         if (add === null || isNaN(add)) return;
@@ -491,7 +505,12 @@
         const fd = new FormData();
         fd.append("phone", currentUser.phone);
         fd.append("id", id);
-        fd.append(field, Number(value));
+        // Handles both text (category/unit) and numbers (price)
+        if (field === "price" || field === "stockQuantity") {
+          fd.append(field, Number(value));
+        } else {
+          fd.append(field, value);
+        }
         const res = await fetch("/api/update-product", {
           method: "POST",
           body: fd,

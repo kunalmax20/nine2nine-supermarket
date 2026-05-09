@@ -7,6 +7,7 @@ const multer = require("multer");
 const dns = require("dns");
 const cloudinary = require("cloudinary").v2;
 const Product = require("./models/Product");
+const Review = require("./models/Review");
 
 const PORT = process.env.PORT || 3000;
 
@@ -47,16 +48,11 @@ const ADMIN_PASSWORD = "nine2nine";
 const isAdmin = (phone) => ADMIN_NUMBERS.includes(String(phone));
 
 // LOGIN
-// LOGIN
 app.post("/api/login", (req, res) => {
   const { phone, password } = req.body;
-
-  // normalize phone
   const cleanPhone = String(phone).replace(/\D/g, "");
-
   const adminStatus = isAdmin(cleanPhone) && password === ADMIN_PASSWORD;
 
-  // Wrong admin password
   if (!adminStatus && password) {
     return res.json({
       success: false,
@@ -126,13 +122,7 @@ app.post(
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       res.json({ success: true });
     } catch (err) {
-      console.error("🔥 ADD ERROR:", err);
-      console.error("MESSAGE:", err.message);
-
-      res.status(500).json({
-        success: false,
-        message: err.message,
-      });
+      res.status(500).json({ success: false, message: err.message });
     }
   },
 );
@@ -163,19 +153,22 @@ app.post("/api/reduce-stock", async (req, res) => {
   }
 });
 
-// UPDATE PRODUCT
+// UPDATE PRODUCT - FIXED CATEGORY LOGIC HERE
 app.post(
   "/api/update-product",
   upload.single("productImage"),
   async (req, res) => {
     try {
-      const { phone, id, price, stockQuantity, options, unit } = req.body;
+      const { phone, id, price, stockQuantity, options, unit, category, name } =
+        req.body;
       if (!isAdmin(phone) || !id)
         return res.status(403).json({ success: false });
 
       let updateData = {};
-      if (price !== undefined) updateData.price = Number(price);
+      if (name !== undefined) updateData.name = name;
+      if (price !== undefined && price !== "") updateData.price = Number(price);
       if (unit !== undefined) updateData.unit = unit;
+      if (category !== undefined) updateData.category = category; // FIXED: Added this line
       if (options) updateData.options = JSON.parse(options);
 
       let updateQuery = { $set: updateData };
@@ -207,9 +200,7 @@ app.post("/api/delete-product", async (req, res) => {
   res.json({ success: true });
 });
 
-const Review = require("./models/Review");
-
-// PUBLIC: Get all reviews
+// REVIEWS API
 app.get("/api/reviews", async (req, res) => {
   try {
     const reviews = await Review.find().sort({ date: -1 });
@@ -219,7 +210,6 @@ app.get("/api/reviews", async (req, res) => {
   }
 });
 
-// PUBLIC: Post a new review
 app.post("/api/add-review", async (req, res) => {
   try {
     const newReview = new Review(req.body);
@@ -230,20 +220,16 @@ app.post("/api/add-review", async (req, res) => {
   }
 });
 
-// ADMIN ONLY: Reply to a review
 app.post("/api/reply-review", async (req, res) => {
   const { phone, reviewId, replyText } = req.body;
-  if (!ADMIN_NUMBERS.includes(phone))
-    return res.status(403).send("Unauthorized");
+  if (!isAdmin(phone)) return res.status(403).send("Unauthorized");
   await Review.findByIdAndUpdate(reviewId, { reply: replyText });
   res.json({ success: true });
 });
 
-// ADMIN ONLY: Delete a review
 app.post("/api/delete-review", async (req, res) => {
   const { phone, reviewId } = req.body;
-  if (!ADMIN_NUMBERS.includes(phone))
-    return res.status(403).send("Unauthorized");
+  if (!isAdmin(phone)) return res.status(403).send("Unauthorized");
   await Review.findByIdAndDelete(reviewId);
   res.json({ success: true });
 });
