@@ -9,6 +9,29 @@ const cloudinary = require("cloudinary").v2;
 const Product = require("./models/Product");
 const Review = require("./models/Review");
 
+// Automatically creates schema registration if models/Order.js doesn't exist yet
+let Order;
+try {
+  Order = require("./models/Order");
+} catch (e) {
+  const OrderSchema = new mongoose.Schema({
+    customerPhone: { type: String, required: true },
+    items: [
+      {
+        id: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        name: { type: String, required: true },
+        size: { type: String, required: true },
+        qty: { type: Number, required: true },
+        price: { type: Number, required: true },
+      },
+    ],
+    totalAmount: { type: Number, required: true },
+    status: { type: String, default: "Pending" },
+    date: { type: Date, default: Date.now },
+  });
+  Order = mongoose.model("Order", OrderSchema);
+}
+
 const PORT = process.env.PORT || 3000;
 
 cloudinary.config({
@@ -153,7 +176,7 @@ app.post("/api/reduce-stock", async (req, res) => {
   }
 });
 
-// UPDATE PRODUCT - FIXED CATEGORY LOGIC HERE
+// UPDATE PRODUCT
 app.post(
   "/api/update-product",
   upload.single("productImage"),
@@ -168,7 +191,7 @@ app.post(
       if (name !== undefined) updateData.name = name;
       if (price !== undefined && price !== "") updateData.price = Number(price);
       if (unit !== undefined) updateData.unit = unit;
-      if (category !== undefined) updateData.category = category; // FIXED: Added this line
+      if (category !== undefined) updateData.category = category;
       if (options) updateData.options = JSON.parse(options);
 
       let updateQuery = { $set: updateData };
@@ -234,4 +257,86 @@ app.post("/api/delete-review", async (req, res) => {
   res.json({ success: true });
 });
 
+// ==========================================================
+// NEW ORDER PIPELINE ENDPOINTS (ADMIN-CONTROLLED INVENTORY)
+// ==========================================================
+
+// PUBLIC: Pushes shopping cart contents silently into MongoDB database archive entries
+app.post("/api/create-pending-order", async (req, res) => {
+  try {
+    const { customerPhone, items, totalAmount } = req.body;
+    const newOrder = new Order({
+      customerPhone,
+      items,
+      totalAmount,
+      status: "Pending",
+    });
+    await newOrder.save();
+    res.json({ success: true, orderId: newOrder._id });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// ADMIN: Grabs pending dashboard listings metrics data blocks
+app.get("/api/admin/orders", async (req, res) => {
+  try {
+    const { phone } = req.query;
+    if (!isAdmin(phone)) return res.status(403).json([]);
+    const orders = await Order.find({ status: "Pending" }).sort({ date: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+// ADMIN: Deducts physical store stock limits safely upon administrative confirmation
+app.post("/api/admin/approve-order", async (req, res) => {
+  try {
+    const { phone, orderId } = req.body;
+    if (!isAdmin(phone)) return res.status(403).json({ success: false });
+
+    const order = await Order.findById(orderId);
+    if (!order || order.status !== "Pending")
+      return res
+        .status(400)
+        .json({ success: false, message: "Order processed or missing" });
+
+    // Deducts the variant or main product stock levels precisely
+    for (const item of order.items) {
+      if (item.size && item.size !== "Standard") {
+        const variantUpdate = await Product.updateOne(
+          { _id: item.id, "options.size": item.size },
+          { $inc: { "options.$.stock": -Math.abs(item.qty) } },
+        );
+        if (variantUpdate.modifiedCount > 0) continue;
+      }
+      await Product.updateOne(
+        { _id: item.id },
+        { $inc: { stockQuantity: -Math.abs(item.qty) } },
+      );
+    }
+
+    order.status = "Approved";
+    await order.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// ADMIN: Drops prank or incorrect balance configurations cleanly out of view metrics
+app.post("/api/admin/cancel-order", async (req, res) => {
+  try {
+    const { phone, orderId } = req.body;
+    if (!isAdmin(phone)) return res.status(403).json({ success: false });
+
+    await Order.findByIdAndUpdate(orderId, { status: "Cancelled" });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
 app.listen(PORT, () => console.log(`🚀 LIVE ON PORT ${PORT}`));
+  

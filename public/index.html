@@ -310,7 +310,7 @@
           </button>
         </div>
         <button onclick="toggleCart()" class="text-3xl text-slate-400">
-          &times;
+          ×
         </button>
       </div>
       <div
@@ -641,59 +641,64 @@
         );
       }
 
-      let pendingOrderKeys = null;
+      // FIXED CHECKOUT INVOICE ENGINE LINKED TO BACKEND PENDING QUEUE
       async function generateInvoice() {
         const keys = Object.keys(cart);
         if (!keys.length) return showToast("Cart empty", "error");
-        let subtotal = 0,
-          msg = "📦 *NINE2NINE ORDER*%0A%0A";
+
+        let subtotal = 0;
+        let msg = "📦 *NINE2NINE ORDER*%0A%0A";
+        const orderItemsPayload = [];
+
         keys.forEach((k) => {
           const i = cart[k];
           subtotal += i.price * i.qty;
           msg += `• *${i.name}* (${i.size})%0A   ${i.qty} x ₹${i.price} = ₹${i.price * i.qty}%0A`;
-        });
-        const dFee = subtotal >= 2000 ? 0 : 60;
-        msg += `%0A--------------------------%0ASubtotal: ₹${subtotal}%0ADelivery Fee: ${dFee === 0 ? "FREE" : "₹" + dFee}%0A*TOTAL: ₹${subtotal + dFee}*%0A--------------------------%0A`;
-        pendingOrderKeys = keys;
-        window.open(`https://wa.me/919057563838?text=${msg}`, "_blank");
-        setTimeout(
-          () =>
-            document.getElementById("order-modal").classList.remove("hidden"),
-          1000,
-        );
-      }
 
-      async function confirmOrder(isSuccess) {
-        document.getElementById("order-modal").classList.add("hidden");
-        if (isSuccess && pendingOrderKeys) {
-          const items = pendingOrderKeys.map((k) => ({
-            id: cart[k].id,
-            qty: cart[k].qty,
-            size: cart[k].size,
-          }));
-          try {
-            const res = await fetch("/api/reduce-stock", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ items }),
-            });
-            if (res.ok) {
-              showToast("Order Confirmed!");
-              cart = {};
-              updateCartSidebar();
-              if (
-                !document
-                  .getElementById("cart-sidebar")
-                  .classList.contains("translate-x-full")
-              )
-                toggleCart();
-              init();
-            }
-          } catch {
-            showToast("Stock error", "error");
-          }
+          orderItemsPayload.push({
+            id: i.id,
+            name: i.name,
+            size: i.size,
+            qty: i.qty,
+            price: i.price,
+          });
+        });
+
+        const dFee = subtotal >= 2000 ? 0 : 60;
+        const totalAmountCalculated = subtotal + dFee;
+        msg += `%0A--------------------------%0ASubtotal: ₹${subtotal}%0ADelivery Fee: ${dFee === 0 ? "FREE" : "₹" + dFee}%0A*TOTAL: ₹${totalAmountCalculated}*%0A--------------------------%0A`;
+
+        try {
+          // Asynchronously log to the database pipeline quietly as "Pending"
+          await fetch("/api/create-pending-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customerPhone: currentUser.phone,
+              items: orderItemsPayload,
+              totalAmount: totalAmountCalculated,
+            }),
+          });
+
+          showToast("Sending order to shop...");
+          cart = {};
+          updateCartSidebar();
+          if (
+            !document
+              .getElementById("cart-sidebar")
+              .classList.contains("translate-x-full")
+          )
+            toggleCart();
+
+          // Securely hand-off client straight to messaging thread window
+          window.open(`https://wa.me/919057563838?text=${msg}`, "_blank");
+          init();
+        } catch (e) {
+          showToast(
+            "Error establishing connection with checkout system.",
+            "error",
+          );
         }
-        pendingOrderKeys = null;
       }
 
       function showToast(msg, type = "success") {
@@ -744,7 +749,7 @@
             </p>
           </div>
           <p
-            class="mt-4 text-[10px] text-[#81a6c6] font-bold uppercase tracking-widest tracking-widest"
+            class="mt-4 text-[10px] text-[#81a6c6] font-bold uppercase tracking-widest"
           >
             Open 7 Days a Week
           </p>
@@ -766,37 +771,6 @@
         class="max-w-6xl mx-auto mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-xs font-bold uppercase tracking-widest"
       >
         © 2026 Nine2Nine Super-Market Jodhpur
-      </div>
-
-      <div
-        id="order-modal"
-        class="fixed inset-0 bg-black/60 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-sm"
-      >
-        <div
-          class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center"
-        >
-          <div class="text-4xl mb-4">📲</div>
-          <h3 class="text-xl font-bold text-slate-800 mb-2">
-            Check Order Status
-          </h3>
-          <p class="text-sm text-slate-500 mb-6">
-            Did you successfully send the message on WhatsApp?
-          </p>
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              onclick="confirmOrder(false)"
-              class="py-3 rounded-xl font-bold text-slate-500 bg-slate-100 text-sm"
-            >
-              No, Back
-            </button>
-            <button
-              onclick="confirmOrder(true)"
-              class="py-3 rounded-xl font-bold text-white bg-[#001F5B] text-sm shadow-lg"
-            >
-              Yes, Ordered
-            </button>
-          </div>
-        </div>
       </div>
     </footer>
   </body>

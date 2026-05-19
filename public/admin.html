@@ -89,6 +89,35 @@
         </div>
       </div>
 
+      <div class="admin-card p-5 md:p-8 mb-8 border-2 border-amber-200">
+        <div class="flex justify-between items-center mb-6">
+          <h2
+            class="font-bold text-lg md:text-xl text-[#001F5B] flex items-center gap-2"
+          >
+            🔔 Live Customer Orders
+            <span
+              id="orders-count-badge"
+              class="bg-amber-500 text-white text-xs px-2 py-1 rounded-full"
+              >0</span
+            >
+          </h2>
+          <button
+            onclick="loadAdminOrders()"
+            class="text-[10px] md:text-xs font-bold text-[#81a6c6] hover:underline uppercase"
+          >
+            🔄 Refresh Orders
+          </button>
+        </div>
+        <div
+          id="admin-orders-container"
+          class="space-y-4 max-h-[450px] overflow-y-auto no-scrollbar"
+        >
+          <p class="text-slate-400 text-sm">
+            Loading active orders pipeline...
+          </p>
+        </div>
+      </div>
+
       <div class="admin-card p-5 md:p-8 mb-8">
         <div class="flex justify-between items-center mb-6">
           <h2 class="font-bold text-lg md:text-xl text-[#001F5B]">
@@ -224,7 +253,121 @@
         document.getElementById("security-check").classList.add("hidden");
         loadAdmin();
         loadAdminReviews();
+        loadAdminOrders();
+
+        // Check for new customer orders every 30 seconds automatically
+        setInterval(loadAdminOrders, 30000);
       };
+
+      // LIVE ORDERS DATA EXTRACTION AND CARD GENERATION
+      async function loadAdminOrders() {
+        try {
+          const res = await fetch(
+            `/api/admin/orders?phone=${currentUser.phone}`,
+          );
+          const orders = await res.json();
+          document.getElementById("orders-count-badge").innerText =
+            orders.length;
+          const container = document.getElementById("admin-orders-container");
+
+          if (!orders.length) {
+            container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm font-medium">✨ No pending customer orders in queue.</div>`;
+            return;
+          }
+
+          container.innerHTML = orders
+            .map((order) => {
+              const formattedDate = new Date(order.date).toLocaleTimeString(
+                [],
+                { hour: "2-digit", minute: "2-digit" },
+              );
+              const itemRows = order.items
+                .map(
+                  (i) => `
+              <div class="flex justify-between items-center text-xs bg-white p-2 rounded border border-slate-100">
+                <span class="text-slate-700 font-medium">${i.name} <b class="text-blue-500 text-[10px] uppercase ml-1">[${i.size}]</b></span>
+                <span class="text-slate-500">${i.qty} x ₹${i.price} = <b class="text-slate-800 font-bold">₹${i.qty * i.price}</b></span>
+              </div>
+            `,
+                )
+                .join("");
+
+              return `
+              <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex-1 space-y-2">
+                  <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">📞 Phone: +${order.customerPhone}</span>
+                    <span class="text-[11px] text-slate-400 font-semibold">Time: ${formattedDate}</span>
+                  </div>
+                  <div class="space-y-1">${itemRows}</div>
+                </div>
+                <div class="flex md:flex-col items-center justify-between md:justify-center gap-2 shrink-0 border-t md:border-t-0 border-dashed border-amber-200 pt-3 md:pt-0">
+                  <div class="text-right leading-tight">
+                    <span class="text-[9px] text-slate-400 uppercase font-bold block">Total bill</span>
+                    <b class="text-base text-[#001F5B]">₹${order.totalAmount}</b>
+                  </div>
+                  <div class="flex gap-1">
+                    <button onclick="dismissOrder('${order._id}')" class="bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold px-3 py-2 rounded-xl text-xs uppercase transition">Dismiss</button>
+                    <button onclick="approveOrder('${order._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase shadow-sm transition">Approve & Pack</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            })
+            .join("");
+        } catch (err) {
+          console.error("Orders system layout fetch failure:", err);
+        }
+      }
+
+      async function approveOrder(orderId) {
+        if (
+          !confirm(
+            "Approve this order? This will deduct the items from your stock inventory.",
+          )
+        )
+          return;
+        try {
+          const res = await fetch("/api/admin/approve-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: currentUser.phone, orderId }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            loadAdminOrders();
+            loadAdmin();
+          } else {
+            alert(
+              data.message ||
+                "Failed to process stock adjustment verification.",
+            );
+          }
+        } catch (e) {
+          alert("Server pipeline link error.");
+        }
+      }
+
+      async function dismissOrder(orderId) {
+        if (
+          !confirm(
+            "Dismiss order? This will clear it from your screen without changing your stock numbers.",
+          )
+        )
+          return;
+        try {
+          const res = await fetch("/api/admin/cancel-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: currentUser.phone, orderId }),
+          });
+          if ((await res.json()).success) {
+            loadAdminOrders();
+          }
+        } catch (e) {
+          alert("Server cancellation link error.");
+        }
+      }
 
       async function loadAdmin() {
         try {
@@ -505,7 +648,6 @@
         const fd = new FormData();
         fd.append("phone", currentUser.phone);
         fd.append("id", id);
-        // Handles both text (category/unit) and numbers (price)
         if (field === "price" || field === "stockQuantity") {
           fd.append(field, Number(value));
         } else {
